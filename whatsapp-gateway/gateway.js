@@ -48,9 +48,9 @@ async function startBot() {
     });
 
     // Helper to send connection status reports back to Laravel
-    const sendStatusReport = async (status) => {
+    const sendStatusReport = async (status, qr = null) => {
         try {
-            await axios.post(LARAVEL_STATUS_URL, { status });
+            await axios.post(LARAVEL_STATUS_URL, { status, qr });
         } catch (err) {
             // Silently ignore connection errors to Laravel on startup
         }
@@ -65,6 +65,7 @@ async function startBot() {
             console.log('   SILAKAN SCAN QR CODE BERIKUT DENGAN WHATSAPP ANDA');
             console.log('======================================================\n');
             qrcode.generate(qr, { small: true });
+            await sendStatusReport('disconnected', qr);
         }
         
         if (connection === 'close') {

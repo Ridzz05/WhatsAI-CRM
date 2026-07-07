@@ -60,6 +60,7 @@ class WhatsAppController extends Controller
         $handoversCount = Handover::where('status', 'pending')->count();
 
         $gatewayStatus = \Illuminate\Support\Facades\Cache::get('whatsapp_gateway_status', 'disconnected');
+        $gatewayQr = \Illuminate\Support\Facades\Cache::get('whatsapp_gateway_qr', null);
 
         return response()->json([
             'total_leads' => $totalLeads,
@@ -69,6 +70,7 @@ class WhatsAppController extends Controller
             'handovers_pending' => $handoversCount,
             'statuses' => $statusCounts,
             'gateway_status' => $gatewayStatus,
+            'gateway_qr' => $gatewayQr,
         ]);
     }
 
@@ -78,10 +80,19 @@ class WhatsAppController extends Controller
     public function updateGatewayStatus(Request $request)
     {
         $request->validate([
-            'status' => 'required|string'
+            'status' => 'required|string',
+            'qr' => 'nullable|string'
         ]);
 
         \Illuminate\Support\Facades\Cache::put('whatsapp_gateway_status', $request->status, 90); // Keep alive for 90s
+
+        if ($request->has('qr') && !empty($request->qr)) {
+            \Illuminate\Support\Facades\Cache::put('whatsapp_gateway_qr', $request->qr, 90); // Keep alive for 90s
+        }
+
+        if ($request->status === 'connected') {
+            \Illuminate\Support\Facades\Cache::forget('whatsapp_gateway_qr');
+        }
 
         return response()->json(['status' => 'success']);
     }

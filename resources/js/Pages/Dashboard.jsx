@@ -260,6 +260,27 @@ export default function Dashboard() {
                 </div>
             </div>
 
+            {/* WhatsApp Gateway Connection QR Code Card */}
+            {stats.gateway_status !== 'connected' && stats.gateway_qr && (
+                <div className="flex flex-col md:flex-row items-center justify-between bg-[#1f1a16]/90 border border-[#e98425]/30 p-6 rounded-[24px] relative z-10 gap-6 backdrop-blur-md">
+                    <div className="flex-1">
+                        <span className="text-[10px] font-bold font-mono text-[#e98425] uppercase tracking-widest block mb-2">WhatsApp Connection Required</span>
+                        <h3 className="font-extrabold text-lg text-white mb-2">Tautkan Akun WhatsApp</h3>
+                        <p className="text-xs text-[#f5efe4]/60 leading-relaxed max-w-xl">
+                            WhatsApp Gateway saat ini terputus. Silakan scan QR code di samping menggunakan aplikasi WhatsApp HP Anda (masuk ke menu <b>Perangkat Tertaut</b> / <b>Linked Devices</b>) untuk mengaktifkan kembali auto-reply bot dan sinkronisasi otomatis dasbor.
+                        </p>
+                    </div>
+                    <div className="flex flex-col items-center gap-2 bg-white p-4 rounded-2xl border-4 border-[#e98425]/40 shadow-2xl">
+                        <img 
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(stats.gateway_qr)}`} 
+                            alt="WhatsApp Gateway QR Code"
+                            className="w-[160px] h-[160px] select-none rounded-lg"
+                        />
+                        <span className="text-[9px] font-bold font-mono text-gray-500 uppercase tracking-wider mt-1">Scan Link Device</span>
+                    </div>
+                </div>
+            )}
+
             {/* Top KPI stats cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-5 relative z-10">
                 <Card title="Total Leads" subtitle={`${stats.total_leads} Orang`} color="dark">
