@@ -79,6 +79,7 @@ AI WhatsApp Assistant yang terintegrasi dengan CRM Dashboard untuk Loyal Fitness
     * **System Auto-Update UI Button:** Penambahan tombol "Jalankan Update Sistem" di halaman Settings admin panel yang memicu trigger skrip `whats-update.sh` di VPS via backend Laravel. Output konsol dari proses Git pull, database migration, npm compile, dan PM2 restart ditampilkan secara real-time di UI.
     * **Reset Riwayat Chat Lead:** Penambahan tombol "Reset Riwayat Chat" di panel profile sidebar lead pada Dashboard CRM. Ini secara instan menghapus seluruh log pesan percakapan lead tersebut dari database, memaksa bot AI untuk mengulang perkenalan SOP baru dari awal saat ada pesan baru masuk.
     * **Timezone Jakarta (WIB) Lock:** Mengunci zona waktu perhitungan Carbon ke `Asia/Jakarta` agar sapaan salam bot (pagi/siang/sore/malam) tetap akurat 100% mengikuti jam lokal pelanggan (WIB) meskipun server VPS berlokasi fisik di luar negeri.
+    * **Follow-up Removal:** Menghapus sepenuhnya fitur auto-follow-up setelah 1 jam tidak aktif, mematikan polling interval di Node.js `gateway.js`, rute `/api/whatsapp/check-followup`, dan metode di `WhatsAppController.php` untuk membiarkan admin mengontrol komunikasi tindak lanjut sepenuhnya.
 * **File Utama:**
   * [app/Http/Controllers/WhatsAppController.php](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/app/Http/Controllers/WhatsAppController.php)
   * [routes/web.php](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/routes/web.php)
