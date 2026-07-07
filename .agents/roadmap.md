@@ -78,6 +78,7 @@ AI WhatsApp Assistant yang terintegrasi dengan CRM Dashboard untuk Loyal Fitness
     * **Ironclad Chatbot Rules:** Memperketat SOP asisten AI (GPT-4o) untuk memblokir pembocoran harga lengkap/nama promo di awal chat walaupun ditanya langsung oleh pelanggan, serta memaksa listing semua promo aktif dari database tanpa filter.
     * **System Auto-Update UI Button:** Penambahan tombol "Jalankan Update Sistem" di halaman Settings admin panel yang memicu trigger skrip `whats-update.sh` di VPS via backend Laravel. Output konsol dari proses Git pull, database migration, npm compile, dan PM2 restart ditampilkan secara real-time di UI.
     * **Reset Riwayat Chat Lead:** Penambahan tombol "Reset Riwayat Chat" di panel profile sidebar lead pada Dashboard CRM. Ini secara instan menghapus seluruh log pesan percakapan lead tersebut dari database, memaksa bot AI untuk mengulang perkenalan SOP baru dari awal saat ada pesan baru masuk.
+    * **Timezone Jakarta (WIB) Lock:** Mengunci zona waktu perhitungan Carbon ke `Asia/Jakarta` agar sapaan salam bot (pagi/siang/sore/malam) tetap akurat 100% mengikuti jam lokal pelanggan (WIB) meskipun server VPS berlokasi fisik di luar negeri.
 * **File Utama:**
   * [app/Http/Controllers/WhatsAppController.php](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/app/Http/Controllers/WhatsAppController.php)
   * [routes/web.php](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/routes/web.php)
