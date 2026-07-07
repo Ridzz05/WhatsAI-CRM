@@ -72,9 +72,10 @@ AI WhatsApp Assistant yang terintegrasi dengan CRM Dashboard untuk Loyal Fitness
     * **Favicon & Logo Baru:** Menggenerasikan logo monogram **LF** bertema warm orange dan dark charcoal satin menggunakan generator AI, lalu memasangnya sebagai logo login dan favicon sistem.
     * **Login & GuestLayout Redesign:** Merombak tampilan otentikasi login dengan gaya gelap premium, efek glassmorphic, input label dengan Phosphor icons, dan tombol toggle password.
     * **Profile Redesign:** Mematangkan visual [Edit.jsx](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/resources/js/Pages/Profile/Edit.jsx) profil terintegrasi penuh di dalam layout dasbor dengan grid gelap bergaya Level.
-  * **Dashboard Features:**
+  * **Dashboard & Chatbot Features:**
     * **Real-time QR Code Display:** Implementasi penampilan QR Code otentikasi WhatsApp secara langsung pada Dashboard CRM saat status gateway terputus (Offline). CS tidak perlu lagi membuka terminal SSH VPS untuk melakukan pemindaian (scanning).
     * **Root Route Redirect:** Mengubah rute halaman utama `/` agar otomatis mengarahkan (redirect) pengguna ke halaman login jika belum terotentikasi, atau langsung ke dashboard jika sudah login.
+    * **Ironclad Chatbot Rules:** Memperketat SOP asisten AI (GPT-4o) untuk memblokir pembocoran harga lengkap/nama promo di awal chat walaupun ditanya langsung oleh pelanggan, serta memaksa listing semua promo aktif dari database tanpa filter.
 * **File Utama:**
   * [app/Http/Controllers/WhatsAppController.php](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/app/Http/Controllers/WhatsAppController.php)
   * [routes/web.php](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/routes/web.php)
