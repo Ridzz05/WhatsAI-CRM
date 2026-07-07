@@ -1,0 +1,15 @@
+{
+  "name": "whatsapp-gateway-baileys",
+  "version": "1.0.0",
+  "description": "Self-hosted free WhatsApp Gateway for Level CS using Baileys v7.0.0",
+  "main": "gateway.js",
+  "scripts": {
+    "start": "node gateway.js"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^7.0.0-rc13",
+    "axios": "^1.7.9",
+    "pino": "^9.6.0",
+    "qrcode-terminal": "^0.12.0"
+  }
+}
