@@ -363,8 +363,8 @@ class WhatsAppController extends Controller
             $systemWebContent = \App\Services\WebReaderService::getContent($systemWebsite);
             $companyWebContent = \App\Services\WebReaderService::getContent($companyWebsite);
 
-            // Determine local greeting time based on server hour
-            $currentHour = (int)\Carbon\Carbon::now()->format('H');
+            // Determine local greeting time based on Asia/Jakarta (WIB) hour
+            $currentHour = (int)\Carbon\Carbon::now('Asia/Jakarta')->format('H');
             $greetingTime = 'malam';
             if ($currentHour >= 5 && $currentHour < 11) {
                 $greetingTime = 'pagi';
