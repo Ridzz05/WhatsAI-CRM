@@ -9,10 +9,27 @@ const pino = require('pino');
 const axios = require('axios');
 const http = require('http');
 
-// Configure local Laravel Webhook & Status URLs
-const LARAVEL_WEBHOOK_URL = 'http://localhost:8000/api/whatsapp/webhook';
-const LARAVEL_STATUS_URL = 'http://localhost:8000/api/whatsapp/status';
-const LARAVEL_FOLLOWUP_URL = 'http://localhost:8000/api/whatsapp/check-followup';
+const fs = require('fs');
+const path = require('path');
+
+// Dynamically read APP_URL from parent .env file to support both local and production environments
+let LARAVEL_BASE_URL = 'http://localhost:8000';
+try {
+    const envPath = path.join(__dirname, '../.env');
+    if (fs.existsSync(envPath)) {
+        const envContent = fs.readFileSync(envPath, 'utf8');
+        const match = envContent.match(/^APP_URL=(.*)$/m);
+        if (match && match[1]) {
+            LARAVEL_BASE_URL = match[1].trim().replace(/\/+$/, '');
+        }
+    }
+} catch (e) {
+    console.error('⚠️ Gagal membaca berkas .env parent:', e.message);
+}
+
+const LARAVEL_WEBHOOK_URL = `${LARAVEL_BASE_URL}/api/whatsapp/webhook`;
+const LARAVEL_STATUS_URL = `${LARAVEL_BASE_URL}/api/whatsapp/status`;
+const LARAVEL_FOLLOWUP_URL = `${LARAVEL_BASE_URL}/api/whatsapp/check-followup`;
 
 // Track connection state globally
 let isConnected = false;
