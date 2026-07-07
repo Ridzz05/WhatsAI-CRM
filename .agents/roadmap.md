@@ -74,8 +74,10 @@ AI WhatsApp Assistant yang terintegrasi dengan CRM Dashboard untuk Loyal Fitness
     * **Profile Redesign:** Mematangkan visual [Edit.jsx](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/resources/js/Pages/Profile/Edit.jsx) profil terintegrasi penuh di dalam layout dasbor dengan grid gelap bergaya Level.
   * **Dashboard Features:**
     * **Real-time QR Code Display:** Implementasi penampilan QR Code otentikasi WhatsApp secara langsung pada Dashboard CRM saat status gateway terputus (Offline). CS tidak perlu lagi membuka terminal SSH VPS untuk melakukan pemindaian (scanning).
+    * **Root Route Redirect:** Mengubah rute halaman utama `/` agar otomatis mengarahkan (redirect) pengguna ke halaman login jika belum terotentikasi, atau langsung ke dashboard jika sudah login.
 * **File Utama:**
   * [app/Http/Controllers/WhatsAppController.php](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/app/Http/Controllers/WhatsAppController.php)
+  * [routes/web.php](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/routes/web.php)
   * [whatsapp-gateway/gateway.js](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/whatsapp-gateway/gateway.js)
   * [resources/js/Pages/Dashboard.jsx](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/resources/js/Pages/Dashboard.jsx)
   * [app/Services/OpenAiService.php](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/app/Services/OpenAiService.php)
