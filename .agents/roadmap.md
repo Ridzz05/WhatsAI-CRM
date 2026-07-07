@@ -76,11 +76,14 @@ AI WhatsApp Assistant yang terintegrasi dengan CRM Dashboard untuk Loyal Fitness
     * **Real-time QR Code Display:** Implementasi penampilan QR Code otentikasi WhatsApp secara langsung pada Dashboard CRM saat status gateway terputus (Offline). CS tidak perlu lagi membuka terminal SSH VPS untuk melakukan pemindaian (scanning).
     * **Root Route Redirect:** Mengubah rute halaman utama `/` agar otomatis mengarahkan (redirect) pengguna ke halaman login jika belum terotentikasi, atau langsung ke dashboard jika sudah login.
     * **Ironclad Chatbot Rules:** Memperketat SOP asisten AI (GPT-4o) untuk memblokir pembocoran harga lengkap/nama promo di awal chat walaupun ditanya langsung oleh pelanggan, serta memaksa listing semua promo aktif dari database tanpa filter.
+    * **System Auto-Update UI Button:** Penambahan tombol "Jalankan Update Sistem" di halaman Settings admin panel yang memicu trigger skrip `whats-update.sh` di VPS via backend Laravel. Output konsol dari proses Git pull, database migration, npm compile, dan PM2 restart ditampilkan secara real-time di UI.
+    * **Reset Riwayat Chat Lead:** Penambahan tombol "Reset Riwayat Chat" di panel profile sidebar lead pada Dashboard CRM. Ini secara instan menghapus seluruh log pesan percakapan lead tersebut dari database, memaksa bot AI untuk mengulang perkenalan SOP baru dari awal saat ada pesan baru masuk.
 * **File Utama:**
   * [app/Http/Controllers/WhatsAppController.php](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/app/Http/Controllers/WhatsAppController.php)
   * [routes/web.php](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/routes/web.php)
-  * [whatsapp-gateway/gateway.js](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/whatsapp-gateway/gateway.js)
+  * [resources/js/Pages/Settings/Index.jsx](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/resources/js/Pages/Settings/Index.jsx)
   * [resources/js/Pages/Dashboard.jsx](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/resources/js/Pages/Dashboard.jsx)
+  * [whatsapp-gateway/gateway.js](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/whatsapp-gateway/gateway.js)
   * [app/Services/OpenAiService.php](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/app/Services/OpenAiService.php)
   * [app/Services/GeminiService.php](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/app/Services/GeminiService.php)
   * [resources/js/Pages/Auth/Login.jsx](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/resources/js/Pages/Auth/Login.jsx)
