@@ -371,7 +371,7 @@ class WhatsAppController extends Controller
                     . "- Gunakan sebutan 'kakak' atau 'kak'.\n"
                     . "- Gunakan jeda baris baru (line breaks) dan bullet points agar pesan terstruktur rapi, jangan gabungkan semua link dalam satu baris paragraf.\n"
                     . "- Gunakan format tebal khas WhatsApp (*teks*) pada judul atau poin penting agar menarik dibaca.\n"
-                    . "- Sisipkan emoji ramah yang relevan di awal poin penting (misal: 🌐 untuk website, 💪 untuk gym, 📍 untuk lokasi, 🏷️ untuk promo).\n\n"
+                    . "- Gunakan emoji secara sangat hemat (maksimal 1 emoji saja per seluruh pesan) dan hanya pada poin yang sangat relevan. Hindari spam emoji berlebihan.\n\n"
                     . "Alur Percakapan Wajib & Tahapan Chat (Step-by-Step):\n"
                     . "1. *Sapaan & Perkenalan Awal:* Jika chat ini adalah sapaan pertama/awal dari calon member, kamu wajib menyapa dengan menggunakan salam *'Selamat {$greetingTime}'*.\n"
                     . "2. *Perkenalkan Diri:* Selalu perkenalkan dirimu sebagai AI Assistant resmi dari {$gymName} (Contoh: 'Perkenalkan saya AI Assistant dari {$gymName}...').\n"
@@ -497,41 +497,51 @@ class WhatsAppController extends Controller
 
             // If the last message was sent by the AI assistant (waiting on customer reply)
             if ($lastMessage && $lastMessage->sender === 'ai') {
-                $lastActivity = \Carbon\Carbon::parse($lastMessage->created_at);
-                $diffInMinutes = $lastActivity->diffInMinutes($now);
+                // Fetch the second to last message in the conversation
+                $secondLastMessage = Conversation::where('lead_id', $lead->id)
+                    ->orderBy('created_at', 'desc')
+                    ->skip(1)
+                    ->first();
 
-                if ($diffInMinutes >= $thresholdMinutes) {
-                    $chatHistory = Conversation::where('lead_id', $lead->id)
-                        ->orderBy('created_at', 'asc')
-                        ->get()
-                        ->toArray();
+                // Only send a follow-up if the second-to-last message was from the user (ensures exactly 1 follow-up)
+                if ($secondLastMessage && $secondLastMessage->sender === 'user') {
+                    $lastActivity = \Carbon\Carbon::parse($lastMessage->created_at);
+                    $diffInMinutes = $lastActivity->diffInMinutes($now);
 
-                    $settings = \App\Models\Setting::first();
-                    $gymName = $settings->gym_name ?? 'Loyal Fitness';
+                    if ($diffInMinutes >= $thresholdMinutes) {
+                        $chatHistory = Conversation::where('lead_id', $lead->id)
+                            ->orderBy('created_at', 'asc')
+                            ->get()
+                            ->toArray();
 
-                    // Generate a natural, contextual follow-up message using OpenAI/Gemini
-                    $prompt = "Kamu adalah AI Membership Assistant untuk gym {$gymName}.\n\n"
-                            . "Konteks:\n"
-                            . "Calon member bernama " . ($lead->name ?: 'Kakak') . " ini belum membalas chat terakhir dari Anda selama 1 jam.\n\n"
-                            . "Tugas Anda:\n"
-                            . "Buatlah satu pesan follow-up singkat, santai, dan sangat ramah (maksimal 1-2 kalimat) untuk menyapa mereka kembali secara halus. Tanyakan kelanjutan rencana latihan mereka di {$gymName} secara ramah.\n"
-                            . "JANGAN GUNAKAN FORMAT LINK MARKDOWN ATAU TANDA KURUNG. Tulis teks chat biasa.\n"
-                            . "Contoh: 'Halo kak, gimana kemarin jadinya untuk rencana latihan di {$gymName}? Ada yang masih kakak bingungkan? 😊'";
+                        $settings = \App\Models\Setting::first();
+                        $gymName = $settings->gym_name ?? 'Loyal Fitness';
 
-                    $followUpText = \App\Services\AiService::generateResponse($prompt, $chatHistory);
+                        // Generate a natural, contextual follow-up message using OpenAI/Gemini
+                        $prompt = "Kamu adalah AI Membership Assistant untuk gym {$gymName}.\n\n"
+                                . "Konteks:\n"
+                                . "Calon member bernama " . ($lead->name ?: 'Kakak') . " ini belum membalas chat terakhir dari Anda selama 1 jam.\n\n"
+                                . "Tugas Anda:\n"
+                                . "Buatlah satu pesan follow-up singkat, santai, dan sangat ramah (maksimal 1-2 kalimat) untuk menyapa mereka kembali secara halus. Tanyakan kelanjutan rencana latihan mereka di {$gymName} secara ramah.\n"
+                                . "JANGAN GUNAKAN FORMAT LINK MARKDOWN ATAU TANDA KURUNG. Tulis teks chat biasa.\n"
+                                . "Gunakan maksimal 1 emoji ramah saja (misal: 😊). Jangan menggunakan kata-kata dummy atau template kaku.\n"
+                                . "Contoh: 'Halo kak, gimana kemarin jadinya untuk rencana latihan di {$gymName}? Ada yang masih kakak bingungkan? 😊'";
 
-                    if (!empty($followUpText)) {
-                        Conversation::create([
-                            'lead_id' => $lead->id,
-                            'sender' => 'ai',
-                            'message' => $followUpText,
-                        ]);
+                        $followUpText = \App\Services\AiService::generateResponse($prompt, $chatHistory);
 
-                        $lead->followup_sent = true;
-                        $lead->save();
+                        if (!empty($followUpText)) {
+                            Conversation::create([
+                                'lead_id' => $lead->id,
+                                'sender' => 'ai',
+                                'message' => $followUpText,
+                            ]);
 
-                        $this->sendOutgoingMessage($lead->phone, $followUpText);
-                        $sentCount++;
+                            $lead->followup_sent = true;
+                            $lead->save();
+
+                            $this->sendOutgoingMessage($lead->phone, $followUpText);
+                            $sentCount++;
+                        }
                     }
                 }
             }
