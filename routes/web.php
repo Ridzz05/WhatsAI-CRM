@@ -50,6 +50,4 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // Public Webhook route for real WhatsApp Gateway integration (Fonnte/Wablas/Qontak)
 Route::post('/api/whatsapp/webhook', [\App\Http\Controllers\WhatsAppController::class, 'handleWebhook']);
 Route::post('/api/whatsapp/status', [\App\Http\Controllers\WhatsAppController::class, 'updateGatewayStatus']);
-Route::get('/api/whatsapp/check-followup', [\App\Http\Controllers\WhatsAppController::class, 'checkFollowUps']);
-
 require __DIR__.'/auth.php';

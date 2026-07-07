@@ -29,12 +29,10 @@ try {
 
 const LARAVEL_WEBHOOK_URL = `${LARAVEL_BASE_URL}/api/whatsapp/webhook`;
 const LARAVEL_STATUS_URL = `${LARAVEL_BASE_URL}/api/whatsapp/status`;
-const LARAVEL_FOLLOWUP_URL = `${LARAVEL_BASE_URL}/api/whatsapp/check-followup`;
 
 // Track connection state globally
 let isConnected = false;
 let heartbeatInterval = null;
-let followupInterval = null;
 let sock = null;
 
 async function startBot() {
@@ -74,10 +72,6 @@ async function startBot() {
                 clearInterval(heartbeatInterval);
                 heartbeatInterval = null;
             }
-            if (followupInterval) {
-                clearInterval(followupInterval);
-                followupInterval = null;
-            }
 
             const statusCode = lastDisconnect?.error?.output?.statusCode;
             const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
@@ -112,18 +106,6 @@ async function startBot() {
                     await sendStatusReport('connected');
                 }
             }, 45000);
-
-            // Setup periodic 60s trigger to check for customer follow-up alerts in Laravel
-            if (followupInterval) clearInterval(followupInterval);
-            followupInterval = setInterval(async () => {
-                if (isConnected) {
-                    try {
-                        await axios.get(LARAVEL_FOLLOWUP_URL);
-                    } catch (err) {
-                        // Silently ignore cron trigger connection errors
-                    }
-                }
-            }, 60000);
         }
     });
 
