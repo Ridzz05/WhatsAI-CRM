@@ -72,8 +72,12 @@ AI WhatsApp Assistant yang terintegrasi dengan CRM Dashboard untuk Loyal Fitness
     * **Favicon & Logo Baru:** Menggenerasikan logo monogram **LF** bertema warm orange dan dark charcoal satin menggunakan generator AI, lalu memasangnya sebagai logo login dan favicon sistem.
     * **Login & GuestLayout Redesign:** Merombak tampilan otentikasi login dengan gaya gelap premium, efek glassmorphic, input label dengan Phosphor icons, dan tombol toggle password.
     * **Profile Redesign:** Mematangkan visual [Edit.jsx](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/resources/js/Pages/Profile/Edit.jsx) profil terintegrasi penuh di dalam layout dasbor dengan grid gelap bergaya Level.
+  * **Dashboard Features:**
+    * **Real-time QR Code Display:** Implementasi penampilan QR Code otentikasi WhatsApp secara langsung pada Dashboard CRM saat status gateway terputus (Offline). CS tidak perlu lagi membuka terminal SSH VPS untuk melakukan pemindaian (scanning).
 * **File Utama:**
   * [app/Http/Controllers/WhatsAppController.php](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/app/Http/Controllers/WhatsAppController.php)
+  * [whatsapp-gateway/gateway.js](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/whatsapp-gateway/gateway.js)
+  * [resources/js/Pages/Dashboard.jsx](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/resources/js/Pages/Dashboard.jsx)
   * [app/Services/OpenAiService.php](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/app/Services/OpenAiService.php)
   * [app/Services/GeminiService.php](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/app/Services/GeminiService.php)
   * [resources/js/Pages/Auth/Login.jsx](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/resources/js/Pages/Auth/Login.jsx)
