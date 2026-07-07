@@ -11,7 +11,8 @@ import {
     Target,
     Compass,
     Handshake,
-    Sparkle
+    Sparkle,
+    Trash
 } from '@phosphor-icons/react';
 
 export default function Dashboard() {
@@ -221,6 +222,34 @@ export default function Dashboard() {
             }
         } catch (err) {
             console.error("Gagal memperbarui status:", err);
+        }
+    };
+
+    const handleResetChat = async () => {
+        if (!selectedLead) return;
+        if (!confirm(`Apakah Anda yakin ingin menghapus semua riwayat chat dengan ${selectedLead.name}? Tindakan ini akan mereset bot AI agar menyapa kembali dari awal.`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(route('crm.leads.reset', selectedLead.id), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                }
+            });
+            const data = await response.json();
+            if (data.success) {
+                alert(data.message);
+                setConversations([]);
+                fetchLeads();
+            } else {
+                alert('Gagal mereset chat: ' + data.message);
+            }
+        } catch (err) {
+            console.error("Gagal mereset chat:", err);
+            alert('Terjadi kesalahan koneksi.');
         }
     };
 
@@ -605,6 +634,17 @@ export default function Dashboard() {
                                         </p>
                                     </div>
                                 )}
+
+                                {/* Reset Chat button */}
+                                <div className="border-t border-white/5 pt-4 mt-2">
+                                    <button
+                                        onClick={handleResetChat}
+                                        className="w-full py-2.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/30 text-red-400 font-bold text-[10px] rounded-xl tracking-wider font-mono uppercase transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5"
+                                    >
+                                        <Trash className="w-3.5 h-3.5" />
+                                        Reset Riwayat Chat
+                                    </button>
+                                </div>
                             </div>
                         ) : (
                             <div className="my-auto text-center text-xs text-[#f5efe4]/30 font-semibold italic">

@@ -593,4 +593,61 @@ class WhatsAppController extends Controller
             \Illuminate\Support\Facades\Log::error("Failed to send follow-up via local Baileys gateway: " . $e->getMessage());
         }
     }
+
+    /**
+     * Run whats-update.sh system update from the dashboard.
+     */
+    public function runSystemUpdate()
+    {
+        try {
+            $scriptPath = base_path('whats-update.sh');
+            if (!file_exists($scriptPath)) {
+                return response()->json([
+                    'success' => false,
+                    'output' => "Error: whats-update.sh not found at " . $scriptPath
+                ], 404);
+            }
+
+            // Run the script and capture output
+            $output = shell_exec("bash " . escapeshellarg($scriptPath) . " 2>&1");
+
+            return response()->json([
+                'success' => true,
+                'output' => $output
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'output' => "Exception: " . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Clear all conversation messages for a lead.
+     */
+    public function resetLeadChat($leadId)
+    {
+        try {
+            \App\Models\Conversation::where('lead_id', $leadId)->delete();
+            
+            // Reset lead status back to new and clear follow-up state
+            $lead = \App\Models\Lead::find($leadId);
+            if ($lead) {
+                $lead->status = 'new';
+                $lead->followup_sent = false;
+                $lead->save();
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Riwayat chat lead berhasil di-reset.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mereset chat: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

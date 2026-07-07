@@ -41,6 +41,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // System Settings Configuration
     Route::get('/dashboard/settings', [\App\Http\Controllers\WhatsAppController::class, 'settingsPage'])->name('crm.settings');
     Route::post('/dashboard/settings', [\App\Http\Controllers\WhatsAppController::class, 'updateSettings'])->name('crm.settings.update');
+    
+    // System self-update & Lead chat reset
+    Route::post('/dashboard/system/update', [\App\Http\Controllers\WhatsAppController::class, 'runSystemUpdate'])->name('crm.system.update');
+    Route::post('/dashboard/leads/{id}/reset', [\App\Http\Controllers\WhatsAppController::class, 'resetLeadChat'])->name('crm.leads.reset');
 });
 
 // Public Webhook route for real WhatsApp Gateway integration (Fonnte/Wablas/Qontak)

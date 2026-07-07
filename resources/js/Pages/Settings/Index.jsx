@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Head, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import Card from '@/Components/Card';
+import axios from 'axios';
 import { 
     Gear, 
     Globe, 
@@ -9,7 +10,9 @@ import {
     MapPin, 
     Check, 
     Sparkle, 
-    ArrowSquareOut 
+    ArrowSquareOut,
+    ArrowClockwise,
+    TerminalWindow
 } from '@phosphor-icons/react';
 
 export default function SettingsIndex({ settings }) {
@@ -25,6 +28,11 @@ export default function SettingsIndex({ settings }) {
     });
 
     const [alertMessage, setAlertMessage] = useState('');
+    
+    // System self-update states
+    const [isUpdating, setIsUpdating] = useState(false);
+    const [updateOutput, setUpdateOutput] = useState('');
+    const [updateStatus, setUpdateStatus] = useState(''); // 'success', 'error', ''
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -34,6 +42,32 @@ export default function SettingsIndex({ settings }) {
                 setTimeout(() => setAlertMessage(''), 4000);
             }
         });
+    };
+
+    const handleSystemUpdate = async () => {
+        if (!confirm('Apakah Anda yakin ingin memperbarui sistem CRM? Tindakan ini akan menarik kode terbaru dari GitHub, membersihkan cache, dan merestart WhatsApp Gateway.')) {
+            return;
+        }
+
+        setIsUpdating(true);
+        setUpdateOutput('Memulai pembaruan sistem dari VPS, silakan tunggu...\n');
+        setUpdateStatus('');
+
+        try {
+            const response = await axios.post(route('crm.system.update'));
+            if (response.data?.success) {
+                setUpdateOutput(response.data.output || 'Sistem berhasil diperbarui!');
+                setUpdateStatus('success');
+            } else {
+                setUpdateOutput(response.data?.output || 'Gagal melakukan pembaruan.');
+                setUpdateStatus('error');
+            }
+        } catch (err) {
+            setUpdateOutput(err.response?.data?.output || err.message || 'Koneksi terputus saat melakukan pembaruan.');
+            setUpdateStatus('error');
+        } finally {
+            setIsUpdating(false);
+        }
     };
 
     return (
@@ -299,6 +333,43 @@ export default function SettingsIndex({ settings }) {
                                         <span className="font-bold text-blue-800">AI Bot:</span> "Ada kak! Untuk registrasi mandiri, melihat jadwal latihan, dan mengelola membership, kakak bisa langsung mengunjungi portal aplikasi ERP kami di {data.system_website.replace('https://', '')}."
                                     </div>
                                 </div>
+                            </div>
+                        </Card>
+
+                        {/* System Self-Update Card */}
+                        <Card title="System Auto-Update" color="dark">
+                            <div className="flex flex-col gap-3.5 mt-2">
+                                <p className="text-[11px] text-[#f5efe4]/50 leading-relaxed">
+                                    Tarik perubahan kode terbaru dari GitHub ke VPS, bersihkan seluruh cache Laravel, jalankan migrasi database, kompilasi ulang asset Vite, dan restart gateway PM2 secara otomatis tanpa membuka SSH terminal.
+                                </p>
+                                
+                                <button
+                                    onClick={handleSystemUpdate}
+                                    disabled={isUpdating}
+                                    className="w-full py-3 bg-[#e98425] hover:scale-[1.01] active:scale-[0.99] text-[#1a1714] font-extrabold text-xs rounded-xl tracking-wider font-mono uppercase transition-all duration-200 cursor-pointer disabled:opacity-55 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                >
+                                    <ArrowClockwise className={`w-4 h-4 ${isUpdating ? 'animate-spin' : ''}`} weight="bold" />
+                                    {isUpdating ? 'Sedang Memperbarui...' : 'Jalankan Update Sistem'}
+                                </button>
+
+                                {updateOutput && (
+                                    <div className="flex flex-col gap-2 mt-2">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-[9px] font-bold font-mono uppercase tracking-widest text-[#f5efe4]/40 flex items-center gap-1.5">
+                                                <TerminalWindow className="w-3.5 h-3.5" /> Output Konsol VPS
+                                            </span>
+                                            {updateStatus === 'success' && (
+                                                <span className="text-[9px] font-bold font-mono text-[#6cba5b] bg-[#d2eecb]/15 px-2 py-0.5 rounded">SUCCESS</span>
+                                            )}
+                                            {updateStatus === 'error' && (
+                                                <span className="text-[9px] font-bold font-mono text-red-400 bg-red-500/10 px-2 py-0.5 rounded">FAILED</span>
+                                            )}
+                                        </div>
+                                        <pre className="w-full bg-[#0e0d0c] border border-white/10 rounded-xl p-3.5 font-mono text-[9px] text-[#f5efe4]/70 overflow-x-auto max-h-[220px] overflow-y-auto leading-relaxed select-text whitespace-pre-wrap">
+                                            {updateOutput}
+                                        </pre>
+                                    </div>
+                                )}
                             </div>
                         </Card>
 
