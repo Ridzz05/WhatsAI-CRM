@@ -93,3 +93,15 @@ AI WhatsApp Assistant yang terintegrasi dengan CRM Dashboard untuk Loyal Fitness
   * [resources/js/Layouts/GuestLayout.jsx](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/resources/js/Layouts/GuestLayout.jsx)
   * [resources/views/app.blade.php](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/resources/views/app.blade.php)
 
+### [2026-07-08] - Palembang Square AI Module Integration
+* **Deskripsi:** Menambahkan modul informasi cabang baru "Loyal Fitness Prime Palembang Square" ke sistem prompt AI dan mesin fallback NLP lokal.
+* **Perubahan Utama:**
+  * **System Prompt Injection:** Menyuntikkan detail Loyal Fitness Prime Palembang Square (konsep 24 jam premium, lokasi mall, status presales, target opening paling lambat 1 Oktober 2026) dan panduan gaya menjawab spesifik ke dalam prompt utama asisten AI di [WhatsAppController.php](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/app/Http/Controllers/WhatsAppController.php).
+  * **Local NLP Fallback Update:** Memperbarui penanganan pencocokan teks lokal di [GeminiService.php](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/app/Services/GeminiService.php) agar siap mendeteksi dan merespon kata kunci seperti "Palembang Square", "Prime", "PS", dan "cabang baru" dengan akurat ketika API keys tidak terkonfigurasi.
+  * **Test Coverage:** Membuat berkas pengujian [PalembangSquareFallbackTest.php](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/tests/Feature/PalembangSquareFallbackTest.php) untuk memvalidasi respon mesin NLP fallback lokal terhadap berbagai pertanyaan seputar cabang Palembang Square (info umum, fasilitas, harga, jadwal buka, dan perbandingan dengan IP).
+* **File Utama:**
+  * [app/Http/Controllers/WhatsAppController.php](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/app/Http/Controllers/WhatsAppController.php)
+  * [app/Services/GeminiService.php](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/app/Services/GeminiService.php)
+  * [tests/Feature/PalembangSquareFallbackTest.php](file:///C:/Users/Ki/Documents/WORKING/WORKING/GMY-MANAGEMENT/Whats-CS/tests/Feature/PalembangSquareFallbackTest.php)
+
+

@@ -419,7 +419,19 @@ class WhatsAppController extends Controller
                     . "Daftar Promo Aktif:\n"
                     . (empty($promosText) ? "- Promo Member Bulanan umum: Rp 350.000/bulan\n" : $promosText)
                     . "Jadwal Kelas: Sore jam 17:00 weekdays, pagi jam 08:00 weekends.\n"
-                    . "Biaya Personal Trainer (PT): Mulai dari Rp 1.500.000 untuk 10 kali latihan.";
+                    . "Biaya Personal Trainer (PT): Mulai dari Rp 1.500.000 untuk 10 kali latihan.\n\n"
+                    . "INFO LOYAL FITNESS PRIME PALEMBANG SQUARE:\n"
+                    . "- Cabang baru di dalam mall Palembang Square dengan konsep lebih premium, lengkap, dan buka 24 jam.\n"
+                    . "- Saat ini dalam masa presales dengan harga khusus yang lebih murah.\n"
+                    . "- Estimasi selesai/opening paling lambat 1 Oktober 2026 (bisa lebih cepat).\n"
+                    . "- Panduan Gaya Menjawab Khusus Palembang Square:\n"
+                    . "  * Info Umum: \"Betul kak, Loyal Fitness Prime akan hadir di Palembang Square. Konsepnya 24 jam, lokasinya di dalam mall, fasilitasnya lebih lengkap dan lebih premium dari Loyal Fitness IP. Saat ini masih masa presales, jadi harga lebih murah dibanding nanti saat sudah opening. Untuk estimasi selesai paling lama 1 Oktober 2026, tapi bisa saja lebih cepat kalau proses persiapan selesai lebih awal.\"\n"
+                    . "  * Fasilitas: \"Fasilitasnya akan dibuat lebih lengkap kak, seperti gym area, studio class, private area, sauna, VIP room, healthy cafe, dan konsep 24 jam. Jadi member bisa latihan lebih fleksibel dan nyaman.\"\n"
+                    . "  * Harga: \"Untuk harga presales sedang dibuka dengan harga khusus kak, lebih murah dari harga normal saat opening nanti. Biar saya bantu cek promo yang paling cocok ya kak, kakak rencana ambil membership sendiri atau bareng teman/keluarga?\"\n"
+                    . "  * Kapan Buka: \"Target paling lama 1 Oktober 2026 kak. Tapi kalau pengerjaan selesai lebih cepat, kemungkinan opening juga bisa lebih cepat.\"\n"
+                    . "  * Perbandingan dengan Loyal Fitness IP: \"Loyal Fitness Prime Palembang Square akan dibuat lebih lengkap dan lebih premium dari Loyal Fitness IP kak, karena konsepnya memang upgrade: 24 jam, fasilitas lebih lengkap, dan lokasi di mall yang strategis.\"\n"
+                    . "  * Closing Lembut: \"Karena masih presales, biasanya kuota harga murah terbatas kak. Saya bantu amankan harga presales dulu ya, supaya kakak tidak kena harga normal saat opening.\"";
+
 
             // Fetch chat history
             $chatHistory = Conversation::where('lead_id', $lead->id)
@@ -534,7 +546,7 @@ class WhatsAppController extends Controller
             }
 
             // Run the script and capture output
-            $output = shell_exec("bash " . escapeshellarg($scriptPath) . " 2>&1");
+            $output = \shell_exec("bash " . escapeshellarg($scriptPath) . " 2>&1");
 
             return response()->json([
                 'success' => true,

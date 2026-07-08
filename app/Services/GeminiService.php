@@ -80,6 +80,23 @@ class GeminiService
             return "Halo kak! Saya AI Assistant Loyal Fitness. Ada yang bisa saya bantu terkait promo membership, jadwal kelas, fasilitas sauna, atau info lokasi gym kami hari ini?";
         }
 
+        // 0. Loyal Fitness Prime Palembang Square (Cabang Baru)
+        if (str_contains($lastMessage, 'palembang square') || str_contains($lastMessage, 'prime') || str_contains($lastMessage, 'ps') || (str_contains($lastMessage, 'cabang') && str_contains($lastMessage, 'baru'))) {
+            if (str_contains($lastMessage, 'fasilitas') || str_contains($lastMessage, 'alat') || str_contains($lastMessage, 'fitur')) {
+                return "Fasilitasnya akan dibuat lebih lengkap kak, seperti gym area, studio class, private area, sauna, VIP room, healthy cafe, dan konsep 24 jam. Jadi member bisa latihan lebih fleksibel dan nyaman.";
+            }
+            if (str_contains($lastMessage, 'harga') || str_contains($lastMessage, 'biaya') || str_contains($lastMessage, 'membership') || str_contains($lastMessage, 'promo') || str_contains($lastMessage, 'presale') || str_contains($lastMessage, 'bayar') || str_contains($lastMessage, 'daftar')) {
+                return "Untuk harga presales sedang dibuka dengan harga khusus kak, lebih murah dari harga normal saat opening nanti. Biar saya bantu cek promo yang paling cocok ya kak, kakak rencana ambil membership sendiri atau bareng teman/keluarga?";
+            }
+            if (str_contains($lastMessage, 'kapan') || str_contains($lastMessage, 'buka') || str_contains($lastMessage, 'opening') || str_contains($lastMessage, 'selesai') || str_contains($lastMessage, 'mulai') || str_contains($lastMessage, 'tanggal')) {
+                return "Target paling lama 1 Oktober 2026 kak. Tapi kalau pengerjaan selesai lebih cepat, kemungkinan opening juga bisa lebih cepat.";
+            }
+            if (str_contains($lastMessage, 'banding') || str_contains($lastMessage, 'beda') || str_contains($lastMessage, 'ip') || str_contains($lastMessage, 'international plaza')) {
+                return "Loyal Fitness Prime Palembang Square akan dibuat lebih lengkap dan lebih premium dari Loyal Fitness IP kak, karena konsepnya memang upgrade: 24 jam, fasilitas lebih lengkap, dan lokasi di mall yang strategis.";
+            }
+            return "Betul kak, Loyal Fitness Prime akan hadir di Palembang Square. Konsepnya 24 jam, lokasinya di dalam mall, fasilitasnya lebih lengkap dan lebih premium dari Loyal Fitness IP. Saat ini masih masa presales, jadi harga lebih murah dibanding nanti saat sudah opening. Untuk estimasi selesai paling lama 1 Oktober 2026, tapi bisa saja lebih cepat kalau proses persiapan selesai lebih awal.";
+        }
+
         // 1. Pricing & Membership
         if (str_contains($lastMessage, 'harga') || str_contains($lastMessage, 'biaya') || str_contains($lastMessage, 'membership') || str_contains($lastMessage, 'bayar') || str_contains($lastMessage, 'sebulan')) {
             return "Untuk harga membership umum di Loyal Fitness mulai dari Rp 350.000/bulan kak. Tapi khusus bulan ini kita lagi ada Promo Juli hemat up to 30% untuk paket 12 bulan! Kakak lebih tertarik coba membership bulanan atau paket promo hemat?";
