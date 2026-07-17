@@ -156,7 +156,9 @@ async function startBot() {
             // Extract text message content
             const text = msg.message?.conversation || 
                          msg.message?.extendedTextMessage?.text || 
-                         msg.message?.buttonsResponseMessage?.selectedButtonId;
+                         msg.message?.buttonsResponseMessage?.selectedButtonId ||
+                         msg.message?.listResponseMessage?.singleSelectReply?.selectedRowId ||
+                         msg.message?.templateButtonReplyMessage?.selectedId;
 
             if (text) {
                 console.log(`[WA MASUK] Dari: ${phone} (${phoneJid}) - Pesan: "${text}"`);
@@ -191,7 +193,25 @@ async function startBot() {
                         console.log(`[AI BALAS] Untuk: ${phone} (${phoneJid}) - Jawaban: "${aiResponse.substring(0, 60)}..."`);
                         
                         // 3. Send AI response back using Baileys socket!
-                        const sentMsg = await sock.sendMessage(phoneJid, { text: aiResponse });
+                        let sendOptions = { text: aiResponse };
+                        if (response.data?.list) {
+                            sendOptions = {
+                                text: aiResponse,
+                                footer: response.data.list.footer || "Loyal Fitness CRM",
+                                title: response.data.list.title,
+                                buttonText: response.data.list.buttonText || "Klik di sini",
+                                sections: response.data.list.sections
+                            };
+                        } else if (response.data?.buttons) {
+                            sendOptions = {
+                                text: aiResponse,
+                                footer: response.data.buttons.footer || "Loyal Fitness CRM",
+                                buttons: response.data.buttons.buttons,
+                                headerType: response.data.buttons.headerType || 1
+                            };
+                        }
+
+                        const sentMsg = await sock.sendMessage(phoneJid, sendOptions);
                         console.log(`[SUCCESS] Balasan terkirim ke WhatsApp. MsgID: ${sentMsg?.key?.id}`);
                     }
                 } catch (error) {
@@ -230,7 +250,25 @@ const server = http.createServer((req, res) => {
 
                 console.log(`[ASYNCHRONOUS SEND] Mengirim pesan ke ${jid} (Isi: "${message.substring(0, 60)}...")`);
                 
-                const sentMsg = await sock.sendMessage(jid, { text: message });
+                let sendOptions = { text: message };
+                if (payload.list) {
+                    sendOptions = {
+                        text: message,
+                        footer: payload.list.footer || "Loyal Fitness CRM",
+                        title: payload.list.title,
+                        buttonText: payload.list.buttonText || "Klik di sini",
+                        sections: payload.list.sections
+                    };
+                } else if (payload.buttons) {
+                    sendOptions = {
+                        text: message,
+                        footer: payload.buttons.footer || "Loyal Fitness CRM",
+                        buttons: payload.buttons.buttons,
+                        headerType: payload.buttons.headerType || 1
+                    };
+                }
+
+                const sentMsg = await sock.sendMessage(jid, sendOptions);
 
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 return res.end(JSON.stringify({ success: true, msgId: sentMsg?.key?.id }));

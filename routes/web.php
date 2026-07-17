@@ -29,7 +29,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/dashboard/leads/{lead}/assign', [\App\Http\Controllers\WhatsAppController::class, 'assignLead'])->name('crm.leads.assign');
     Route::post('/dashboard/leads/{lead}/status', [\App\Http\Controllers\WhatsAppController::class, 'updateLeadStatus'])->name('crm.leads.status');
     Route::get('/dashboard/users', function () { 
-        return response()->json(['users' => \App\Models\User::all(['id', 'name', 'email'])]); 
+        return response()->json(['users' => \App\Models\User::all(['id', 'name', 'email', 'phone'])]); 
     })->name('crm.users');
     
     // Chat webhook simulation route

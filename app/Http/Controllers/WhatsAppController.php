@@ -152,11 +152,19 @@ class WhatsAppController extends Controller
             $request->name
         );
 
-        return response()->json([
+        $responseData = [
             'success' => true,
             'lead' => $result['lead']->load('assignedUser'),
             'conversations' => Conversation::where('lead_id', $result['lead']->id)->orderBy('created_at', 'asc')->get()
-        ]);
+        ];
+        if (isset($result['list'])) {
+            $responseData['list'] = $result['list'];
+        }
+        if (isset($result['buttons'])) {
+            $responseData['buttons'] = $result['buttons'];
+        }
+
+        return response()->json($responseData);
     }
 
     /**
@@ -187,10 +195,18 @@ class WhatsAppController extends Controller
             ]);
         }
 
-        return response()->json([
+        $responseData = [
             'status' => 'success',
             'ai_response' => $result['ai_response']
-        ]);
+        ];
+        if (isset($result['list'])) {
+            $responseData['list'] = $result['list'];
+        }
+        if (isset($result['buttons'])) {
+            $responseData['buttons'] = $result['buttons'];
+        }
+
+        return response()->json($responseData);
     }
 
     /**
@@ -210,6 +226,70 @@ class WhatsAppController extends Controller
 
         // Reset follow-up status on new incoming message from the customer
         $lead->followup_sent = false;
+
+        $lowerMsg = strtolower(trim($messageText));
+        if ($lowerMsg === 'mc_1' || $lowerMsg === 'mc_2' || $lowerMsg === 'mc_3' || $lowerMsg === 'mc_4' || $lowerMsg === 'mc_5') {
+            $mcMapping = [
+                'mc_1' => '62895604631765',
+                'mc_2' => '6285367394199',
+                'mc_3' => '6281314420857',
+                'mc_4' => '6281929924446',
+                'mc_5' => '6282160149532'
+            ];
+            $mcPhone = $mcMapping[$lowerMsg];
+            $mcUser = \App\Models\User::where('phone', $mcPhone)->first();
+            $mcName = $mcUser ? $mcUser->name : 'Membership Consultant';
+
+            // Check if there is a pending handover
+            $handover = Handover::where('lead_id', $lead->id)
+                ->where('status', 'pending')
+                ->first();
+
+            // Assign lead to this MC
+            $lead->assigned_to = $mcUser ? $mcUser->id : null;
+            $lead->status = 'Handover to CS';
+            $lead->save();
+
+            if ($handover) {
+                $handover->assigned_to = $mcUser ? $mcUser->id : null;
+                $handover->status = 'resolved';
+                $handover->save();
+            } else {
+                Handover::create([
+                    'lead_id' => $lead->id,
+                    'summary' => "Calon member (" . ($lead->name ?: 'Customer') . ") tertarik mendaftar. Minat: " . ($lead->interest ?: 'Belum ditentukan') . ", Target latihan: " . ($lead->goal ?: 'Kesehatan') . ", Domisili: " . ($lead->location ?: 'Palembang') . ". Skor leads: " . $lead->lead_score . "%",
+                    'reason' => 'Direct MC selection via button',
+                    'assigned_to' => $mcUser ? $mcUser->id : null,
+                    'status' => 'resolved'
+                ]);
+            }
+
+            // Save user selection to chat history
+            Conversation::create([
+                'lead_id' => $lead->id,
+                'sender' => 'user',
+                'message' => "Memilih MC: " . $mcName
+            ]);
+
+            // Notify the MC!
+            $summary = "Calon member (" . ($lead->name ?: 'Customer') . ") tertarik mendaftar.\n- Minat: " . ($lead->interest ?: 'Belum ditentukan') . "\n- Target latihan: " . ($lead->goal ?: 'Kesehatan') . "\n- Domisili: " . ($lead->location ?: 'Palembang') . "\n- Skor leads: " . $lead->lead_score . "%";
+            $mcNotifyMessage = "🔔 *NOTIFIKASI LEAD BARU (ROLLOVER)* 🔔\n\nAda lead baru yang memilih Anda sebagai MC!\n\n*Detail Lead:*\n- *Nama:* " . ($lead->name ?: 'Calon Member') . "\n- *No. WA:* " . $lead->phone . "\n- *Goals:* " . ($lead->goal ?: '-') . "\n- *Minat:* " . ($lead->interest ?: '-') . "\n\n*Summary Percakapan:*\n" . $summary . "\n\nSilakan hubungi calon member ini segera ya! 🚀";
+            $this->sendOutgoingMessage($mcPhone, $mcNotifyMessage);
+
+            // AI Response back to customer
+            $aiResponse = "Terima kasih banyak kak! Kakak telah memilih *" . $mcName . "* untuk membantu Kakak. Beliau akan segera menghubungi Kakak via WhatsApp ini ya kak! Sampai jumpa di gym! 😊";
+            
+            Conversation::create([
+                'lead_id' => $lead->id,
+                'sender' => 'ai',
+                'message' => $aiResponse
+            ]);
+
+            return [
+                'lead' => $lead,
+                'ai_response' => $aiResponse
+            ];
+        }
 
         // Save incoming user message
         Conversation::create([
@@ -276,7 +356,8 @@ class WhatsAppController extends Controller
         }
         if (str_contains($lowerMsg, 'harga') || str_contains($lowerMsg, 'biaya') || str_contains($lowerMsg, 'membership')) {
             $newScore = 20;
-        }
+ 
+            }
 
         // Explicit direct closing triggers (Instant Hot Lead)
         if (str_contains($lowerMsg, 'saya mau daftar') || str_contains($lowerMsg, 'bisa bayar sekarang') || str_contains($lowerMsg, 'minta nomor rekening')) {
@@ -333,7 +414,43 @@ class WhatsAppController extends Controller
             ]);
 
             $isHandoverTriggered = true;
-            $aiResponse = "Siap kak, sepertinya kakak sudah cocok ya. Data kakak segera saya teruskan agar langsung di-follow up lebih lanjut oleh *Membership Consultant* kami untuk proses pendaftaran, penawaran harga terbaik, dan konfirmasi jadwal visit kakak. Rekan kami akan segera menghubungi kakak lewat WhatsApp ini ya kak! Terima kasih banyak kak. 🙏";
+            $aiResponse = "Siap kak, sepertinya kakak sudah cocok ya. Silakan pilih salah satu *Membership Consultant (MC)* kami di bawah ini untuk membantu proses pendaftaran, penawaran harga terbaik, dan visit Kakak:\n\n"
+                        . "1. *Popi* (https://wa.me/62895604631765)\n"
+                        . "2. *Ayu* (https://wa.me/6285367394199)\n"
+                        . "3. *Indah* (https://wa.me/6281314420857)\n"
+                        . "4. *Lenny* (https://wa.me/6281929924446)\n"
+                        . "5. *Mesi Lenny* (https://wa.me/6282160149532)\n\n"
+                        . "Atau Kakak juga bisa klik tombol *'Pilih Consultant'* di bawah ini ya kak! 👇";
+
+            // Save AI reply
+            Conversation::create([
+                'lead_id' => $lead->id,
+                'sender' => 'ai',
+                'message' => $aiResponse,
+            ]);
+
+            $list = [
+                'title' => 'Pilih Consultant',
+                'buttonText' => 'Pilih Consultant',
+                'sections' => [
+                    [
+                        'title' => 'Membership Consultant',
+                        'rows' => [
+                            ['title' => 'Popi', 'rowId' => 'mc_1', 'description' => '0895-6046-31765'],
+                            ['title' => 'Ayu', 'rowId' => 'mc_2', 'description' => '0853-6739-4199'],
+                            ['title' => 'Indah', 'rowId' => 'mc_3', 'description' => '0813-1442-0857'],
+                            ['title' => 'Lenny', 'rowId' => 'mc_4', 'description' => '0819-2992-4446'],
+                            ['title' => 'Mesi Lenny', 'rowId' => 'mc_5', 'description' => '0821-6014-9532']
+                        ]
+                    ]
+                ]
+            ];
+
+            return [
+                'lead' => $lead,
+                'ai_response' => $aiResponse,
+                'list' => $list
+            ];
         } elseif ($isHumanManaged) {
             // Mute the AI once it has been handed over to human CS agents
             return [
@@ -353,7 +470,7 @@ class WhatsAppController extends Controller
             $companyName = $settings->company_name ?? 'PT Solusi Mitra Mandiri';
             $companyWebsite = $settings->company_website ?? 'https://solusimitramandiri.com';
             $systemWebsite = $settings->system_website ?? 'https://loyalfitness.id';
-            $instagramUrl = $settings->instagram_url ?? 'https://www.instagram.com/loyalfitnessindonesia?igsh=MWs2NzR6NGUwNGRpMg%3D%3D&utm_source=qr';
+            $instagramUrl = $settings->instagram_url ?? 'https://www.instagram.com/loyalfitnessindonesia';
             $gymName = $settings->gym_name ?? 'Loyal Fitness';
             $gymAddress = $settings->gym_address ?? 'International Plaza Mall Palembang Lantai 2';
             $featuresList = $settings->features_list ?? '';

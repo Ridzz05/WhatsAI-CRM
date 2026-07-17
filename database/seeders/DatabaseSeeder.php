@@ -27,10 +27,47 @@ class DatabaseSeeder extends Seeder
         );
 
         User::updateOrCreate(
-            ['email' => 'marketing@example.com'],
+            ['email' => 'popi@example.com'],
             [
-                'name' => 'Adinda (Marketing/CS)',
+                'name' => 'Popi (Marketing/CS)',
                 'password' => Hash::make('password'),
+                'phone' => '62895604631765',
+            ]
+        );
+
+        User::updateOrCreate(
+            ['email' => 'ayu@example.com'],
+            [
+                'name' => 'Ayu (Marketing/CS)',
+                'password' => Hash::make('password'),
+                'phone' => '6285367394199',
+            ]
+        );
+
+        User::updateOrCreate(
+            ['email' => 'indah@example.com'],
+            [
+                'name' => 'Indah (Marketing/CS)',
+                'password' => Hash::make('password'),
+                'phone' => '6281314420857',
+            ]
+        );
+
+        User::updateOrCreate(
+            ['email' => 'lenny@example.com'],
+            [
+                'name' => 'Lenny (Marketing/CS)',
+                'password' => Hash::make('password'),
+                'phone' => '6281929924446',
+            ]
+        );
+
+        User::updateOrCreate(
+            ['email' => 'mesi@example.com'],
+            [
+                'name' => 'Mesi Lenny (Marketing/CS)',
+                'password' => Hash::make('password'),
+                'phone' => '6282160149532',
             ]
         );
 
