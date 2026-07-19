@@ -20,7 +20,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             '/api/whatsapp/webhook',
             '/api/whatsapp/status',
-            '/api/whatsapp/check-followup'
+            '/api/whatsapp/check-followup',
+            '/api/whatsapp/manual-activity',
+            '/api/whatsapp/check-mute'
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

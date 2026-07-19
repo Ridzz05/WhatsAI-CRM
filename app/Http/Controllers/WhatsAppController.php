@@ -400,8 +400,10 @@ class WhatsAppController extends Controller
         }
 
         $isHumanManaged = in_array($lead->status, ['Handover to CS', 'Visit Scheduled', 'Closed Won', 'Closed Lost']);
+        $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+        $isMutedByCache = \Illuminate\Support\Facades\Cache::has("whatsapp_mute_ai_{$cleanPhone}");
 
-        if (($lead->lead_score >= 70 || $hasClosingKeyword) && !$isHumanManaged) {
+        if (($lead->lead_score >= 70 || $hasClosingKeyword) && !$isHumanManaged && !$isMutedByCache) {
             $lead->status = 'Handover to CS';
             $lead->save();
 
@@ -451,8 +453,8 @@ class WhatsAppController extends Controller
                 'ai_response' => $aiResponse,
                 'list' => $list
             ];
-        } elseif ($isHumanManaged) {
-            // Mute the AI once it has been handed over to human CS agents
+        } elseif ($isHumanManaged || $isMutedByCache) {
+            // Mute the AI once it has been handed over to human CS agents or manual activity is detected
             return [
                 'lead' => $lead,
                 'ai_response' => null
@@ -678,6 +680,47 @@ class WhatsAppController extends Controller
     }
 
     /**
+     * Handle manual messaging or reading activity from the Baileys gateway to mute the AI.
+     */
+    public function handleManualActivity(Request $request)
+    {
+        $request->validate([
+            'phone' => 'required|string',
+        ]);
+
+        $phone = $request->phone;
+        // Normalize phone number (keep digits only)
+        $phone = preg_replace('/[^0-9]/', '', $phone);
+
+        // Cache mute state for 10 minutes (debounce timer)
+        \Illuminate\Support\Facades\Cache::put("whatsapp_mute_ai_{$phone}", true, now()->addMinutes(10));
+
+        // Update Lead status to Handover to CS so agents know it is under manual handling
+        $lead = Lead::where('phone', $phone)->first();
+        if ($lead && !in_array($lead->status, ['Handover to CS', 'Visit Scheduled', 'Closed Won', 'Closed Lost'])) {
+            $lead->status = 'Handover to CS';
+            $lead->save();
+
+            // Create Handover record if it doesn't exist
+            $exists = Handover::where('lead_id', $lead->id)->where('status', 'pending')->exists();
+            if (!$exists) {
+                Handover::create([
+                    'lead_id' => $lead->id,
+                    'summary' => "Agen merespon secara manual dari HP/perangkat terhubung.",
+                    'reason' => 'Manual human activity detected',
+                    'status' => 'pending'
+                ]);
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'AI muted for phone ' . $phone,
+            'muted_until' => now()->addMinutes(10)->toDateTimeString()
+        ]);
+    }
+
+    /**
      * Clear all conversation messages for a lead.
      */
     public function resetLeadChat($leadId)
@@ -691,6 +734,9 @@ class WhatsAppController extends Controller
                 $lead->status = 'new';
                 $lead->followup_sent = false;
                 $lead->save();
+
+                // Clear AI mute cache
+                \Illuminate\Support\Facades\Cache::forget("whatsapp_mute_ai_{$lead->phone}");
             }
 
             return response()->json([
@@ -703,5 +749,24 @@ class WhatsAppController extends Controller
                 'message' => 'Gagal mereset chat: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Check if a specific phone number is muted from AI auto-reply.
+     */
+    public function checkMuteStatus(Request $request)
+    {
+        $phone = preg_replace('/[^0-9]/', '', $request->phone ?? '');
+        $isMuted = \Illuminate\Support\Facades\Cache::has("whatsapp_mute_ai_{$phone}");
+        
+        $lead = Lead::where('phone', $phone)->first();
+        if ($lead && in_array($lead->status, ['Handover to CS', 'Visit Scheduled', 'Closed Won', 'Closed Lost'])) {
+            $isMuted = true;
+        }
+
+        return response()->json([
+            'phone' => $phone,
+            'is_muted' => $isMuted
+        ]);
     }
 }

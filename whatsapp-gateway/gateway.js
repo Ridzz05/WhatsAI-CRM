@@ -34,6 +34,7 @@ const LARAVEL_STATUS_URL = `${LARAVEL_BASE_URL}/api/whatsapp/status`;
 let isConnected = false;
 let heartbeatInterval = null;
 let sock = null;
+const botSentMessageIds = new Set();
 
 async function startBot() {
     // Save authentication state credentials inside folder "auth_session"
@@ -129,9 +130,71 @@ async function startBot() {
         }
     });
 
+    // Monitor chat room activity (e.g. chat opened/read on paired phone)
+    sock.ev.on('chats.update', (chats) => {
+        for (const chat of chats) {
+            if (chat.id && (chat.unreadCount === 0 || chat.read === true)) {
+                let phoneJid = chat.id;
+                if (phoneJid.endsWith('@s.whatsapp.net') || phoneJid.endsWith('@lid')) {
+                    const phone = phoneJid.replace('@s.whatsapp.net', '').replace('@lid', '');
+                    console.log(`[CHAT ROOM OPENED ON PHONE] Room chat ${phone} dibuka di HP. Mematikan AI...`);
+                    const LARAVEL_MANUAL_ACTIVITY_URL = `${LARAVEL_BASE_URL}/api/whatsapp/manual-activity`;
+                    axios.post(LARAVEL_MANUAL_ACTIVITY_URL, { phone }).catch(() => {});
+                }
+            }
+        }
+    });
+
+    // Monitor user presence updates (e.g. self presence, composing on paired phone)
+    sock.ev.on('presence.update', async (update) => {
+        if (!sock?.user?.id || !update.presences) return;
+        const myPhoneNumber = sock.user.id.split(':')[0];
+        
+        // Check if any presence in the update belongs to our own paired account
+        for (const [participantJid, presenceInfo] of Object.entries(update.presences)) {
+            if (participantJid.includes(myPhoneNumber)) {
+                const status = presenceInfo?.lastKnownPresence;
+                if (status === 'composing' || status === 'recording' || status === 'available') {
+                    let phoneJid = update.id;
+                    if (phoneJid && (phoneJid.endsWith('@s.whatsapp.net') || phoneJid.endsWith('@lid'))) {
+                        const phone = phoneJid.replace('@s.whatsapp.net', '').replace('@lid', '');
+                        console.log(`[PRESENCE ACTIVE ON PHONE] HP Utama terdeteksi ${status} di room chat ${phone}. Mematikan AI...`);
+                        const LARAVEL_MANUAL_ACTIVITY_URL = `${LARAVEL_BASE_URL}/api/whatsapp/manual-activity`;
+                        axios.post(LARAVEL_MANUAL_ACTIVITY_URL, { phone }).catch(() => {});
+                    }
+                }
+            }
+        }
+    });
+
     // Handle incoming messages
     sock.ev.on('messages.upsert', async (m) => {
         const msg = m.messages[0];
+
+        // If the message is sent from the paired phone itself (human operator active)
+        if (msg.key.fromMe && m.type === 'notify') {
+            // Check if this message was sent by the bot (automated response)
+            if (msg.key.id && botSentMessageIds.has(msg.key.id)) {
+                // Ignore bot's own automated messages
+                return;
+            }
+
+            let phoneJid = msg.key.remoteJidAlt || msg.key.remoteJid;
+            if (phoneJid && (phoneJid.endsWith('@s.whatsapp.net') || phoneJid.endsWith('@lid'))) {
+                const phone = phoneJid.replace('@s.whatsapp.net', '').replace('@lid', '');
+                const text = msg.message?.conversation || 
+                             msg.message?.extendedTextMessage?.text;
+
+                if (text) {
+                    console.log(`[MANUAL CHAT DETECTED] Agen mengirim pesan manual ke ${phone}. Menghubungi Laravel untuk mematikan AI...`);
+                    const LARAVEL_MANUAL_ACTIVITY_URL = `${LARAVEL_BASE_URL}/api/whatsapp/manual-activity`;
+                    axios.post(LARAVEL_MANUAL_ACTIVITY_URL, { phone })
+                        .catch(err => {
+                            console.error('❌ Gagal mengirim notifikasi manual-activity ke Laravel:', err.message);
+                        });
+                }
+            }
+        }
         
         // Only process incoming text messages from other users
         if (!msg.key.fromMe && m.type === 'notify') {
@@ -190,6 +253,17 @@ async function startBot() {
                             await new Promise(resolve => setTimeout(resolve, delayMs));
                         }
 
+                        // Re-check if the contact became muted by human activity while waiting out the typing delay
+                        try {
+                            const muteCheck = await axios.post(`${LARAVEL_BASE_URL}/api/whatsapp/check-mute`, { phone });
+                            if (muteCheck.data?.is_muted) {
+                                console.log(`[ABORT AI REPLY] Agen terdeteksi aktif di room chat ${phone}. Membatalkan balasan AI.`);
+                                return;
+                            }
+                        } catch (err) {
+                            // Silently ignore check errors
+                        }
+
                         console.log(`[AI BALAS] Untuk: ${phone} (${phoneJid}) - Jawaban: "${aiResponse.substring(0, 60)}..."`);
                         
                         // 3. Send AI response back using Baileys socket!
@@ -212,6 +286,10 @@ async function startBot() {
                         }
 
                         const sentMsg = await sock.sendMessage(phoneJid, sendOptions);
+                        if (sentMsg?.key?.id) {
+                            botSentMessageIds.add(sentMsg.key.id);
+                            setTimeout(() => botSentMessageIds.delete(sentMsg.key.id), 60000);
+                        }
                         console.log(`[SUCCESS] Balasan terkirim ke WhatsApp. MsgID: ${sentMsg?.key?.id}`);
                     }
                 } catch (error) {
@@ -269,6 +347,10 @@ const server = http.createServer((req, res) => {
                 }
 
                 const sentMsg = await sock.sendMessage(jid, sendOptions);
+                if (sentMsg?.key?.id) {
+                    botSentMessageIds.add(sentMsg.key.id);
+                    setTimeout(() => botSentMessageIds.delete(sentMsg.key.id), 60000);
+                }
 
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 return res.end(JSON.stringify({ success: true, msgId: sentMsg?.key?.id }));
