@@ -10,11 +10,12 @@ class OpenWaService
     /**
      * Send text message via OpenWA Gateway REST API.
      */
-    public static function sendMessage($phone, $message)
+    public static function sendMessage($phone, $message, $sessionId = null)
     {
         $baseUrl = env('OPENWA_BASE_URL', 'http://localhost:2785');
         $apiKey = env('OPENWA_API_KEY', '');
         $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+        $uuid = $sessionId ?? self::getDefaultSessionUuid() ?? 'default';
         
         // Ensure standard phone number formatting for WhatsApp JID
         $chatId = str_contains($cleanPhone, '@') ? $cleanPhone : "{$cleanPhone}@s.whatsapp.net";
@@ -26,7 +27,7 @@ class OpenWaService
             }
 
             // Post to OpenWA sessions message send endpoint
-            $response = $client->post("{$baseUrl}/api/sessions/default/messages/send-text", [
+            $response = $client->post("{$baseUrl}/api/sessions/{$uuid}/messages/send-text", [
                 'chatId' => $chatId,
                 'text' => $message,
             ]);
@@ -122,10 +123,11 @@ class OpenWaService
     /**
      * Send WhatsApp Story / Status update via OpenWA Gateway
      */
-    public static function sendStatus($text, $bgColor = '#075e54')
+    public static function sendStatus($text, $bgColor = '#075e54', $sessionId = null)
     {
         $baseUrl = env('OPENWA_BASE_URL', 'http://localhost:2785');
         $apiKey = env('OPENWA_API_KEY', '');
+        $uuid = $sessionId ?? self::getDefaultSessionUuid() ?? 'default';
 
         try {
             $client = Http::withoutVerifying()->timeout(10);
@@ -133,7 +135,7 @@ class OpenWaService
                 $client = $client->withHeaders(['X-API-Key' => $apiKey]);
             }
 
-            $response = $client->post("{$baseUrl}/api/sessions/default/status/send-text", [
+            $response = $client->post("{$baseUrl}/api/sessions/{$uuid}/status/send-text", [
                 'text' => $text,
                 'backgroundColor' => $bgColor
             ]);
