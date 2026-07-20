@@ -13,7 +13,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Dynamically read APP_URL from parent .env file to support both local and production environments
-let LARAVEL_BASE_URL = 'http://localhost:8000';
+let LARAVEL_BASE_URL = 'http://localhost:8001';
 try {
     const envPath = path.join(__dirname, '../.env');
     if (fs.existsSync(envPath)) {
