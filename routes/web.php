@@ -66,6 +66,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/api/ai/polish', [\App\Http\Controllers\AiAssistantController::class, 'polish'])->name('api.ai.polish');
 
     Route::get('/dashboard/openwa/status', [\App\Http\Controllers\WhatsAppController::class, 'getOpenWaStatus'])->name('crm.openwa.status');
+    Route::get('/dashboard/openwa/qr', [\App\Http\Controllers\WhatsAppController::class, 'getOpenWaQrCode'])->name('crm.openwa.qr');
+    Route::post('/dashboard/openwa/pairing-code', [\App\Http\Controllers\WhatsAppController::class, 'getOpenWaPairingCode'])->name('crm.openwa.pairing-code');
+    Route::post('/dashboard/openwa/pair', [\App\Http\Controllers\WhatsAppController::class, 'pairOpenWaSession'])->name('crm.openwa.pair');
+    Route::post('/dashboard/openwa/unpair', [\App\Http\Controllers\WhatsAppController::class, 'unpairOpenWaSession'])->name('crm.openwa.unpair');
 
     // System self-update & Lead chat reset
     Route::post('/dashboard/system/update', [\App\Http\Controllers\WhatsAppController::class, 'runSystemUpdate'])->name('crm.system.update');

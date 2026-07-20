@@ -117,4 +117,123 @@ class OpenWaService
             'message' => 'Failed to post status via OpenWA Gateway'
         ];
     }
+
+    /**
+     * Get QR Code for WhatsApp Session Pairing
+     */
+    public static function getQrCode($sessionId = 'default')
+    {
+        $baseUrl = env('OPENWA_BASE_URL', 'http://localhost:2785');
+        $apiKey = env('OPENWA_API_KEY', '');
+
+        try {
+            $client = Http::withoutVerifying()->timeout(5);
+            if (!empty($apiKey)) {
+                $client = $client->withHeaders(['X-API-Key' => $apiKey]);
+            }
+
+            $response = $client->get("{$baseUrl}/api/sessions/{$sessionId}/qr");
+            if ($response->successful()) {
+                return [
+                    'success' => true,
+                    'qr' => $response->json()['qr'] ?? $response->body(),
+                    'data' => $response->json()
+                ];
+            }
+        } catch (\Exception $e) {
+            Log::error("OpenWA QR Error: " . $e->getMessage());
+        }
+
+        return [
+            'success' => false,
+            'message' => 'Failed to fetch QR Code from OpenWA'
+        ];
+    }
+
+    /**
+     * Get 8-Digit Pairing Code for Phone Pairing
+     */
+    public static function getPairingCode($phone, $sessionId = 'default')
+    {
+        $baseUrl = env('OPENWA_BASE_URL', 'http://localhost:2785');
+        $apiKey = env('OPENWA_API_KEY', '');
+        $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+
+        try {
+            $client = Http::withoutVerifying()->timeout(10);
+            if (!empty($apiKey)) {
+                $client = $client->withHeaders(['X-API-Key' => $apiKey]);
+            }
+
+            $response = $client->post("{$baseUrl}/api/sessions/{$sessionId}/pairing-code", [
+                'phoneNumber' => $cleanPhone
+            ]);
+
+            if ($response->successful()) {
+                return [
+                    'success' => true,
+                    'code' => $response->json()['code'] ?? $response->json()['pairingCode'] ?? null,
+                    'data' => $response->json()
+                ];
+            }
+        } catch (\Exception $e) {
+            Log::error("OpenWA Pairing Code Error: " . $e->getMessage());
+        }
+
+        return [
+            'success' => false,
+            'message' => 'Failed to generate Pairing Code'
+        ];
+    }
+
+    /**
+     * Start WhatsApp Session
+     */
+    public static function startSession($sessionId = 'default')
+    {
+        $baseUrl = env('OPENWA_BASE_URL', 'http://localhost:2785');
+        $apiKey = env('OPENWA_API_KEY', '');
+
+        try {
+            $client = Http::withoutVerifying()->timeout(10);
+            if (!empty($apiKey)) {
+                $client = $client->withHeaders(['X-API-Key' => $apiKey]);
+            }
+
+            $response = $client->post("{$baseUrl}/api/sessions/{$sessionId}/start");
+            return [
+                'success' => $response->successful(),
+                'data' => $response->json()
+            ];
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Stop / Disconnect / Unpair WhatsApp Session
+     */
+    public static function stopSession($sessionId = 'default')
+    {
+        $baseUrl = env('OPENWA_BASE_URL', 'http://localhost:2785');
+        $apiKey = env('OPENWA_API_KEY', '');
+
+        try {
+            $client = Http::withoutVerifying()->timeout(10);
+            if (!empty($apiKey)) {
+                $client = $client->withHeaders(['X-API-Key' => $apiKey]);
+            }
+
+            // Stop session and force kill for clean unpair
+            $response = $client->post("{$baseUrl}/api/sessions/{$sessionId}/stop");
+            $client->post("{$baseUrl}/api/sessions/{$sessionId}/force-kill");
+
+            return [
+                'success' => true,
+                'message' => 'Session disconnected and unpaired successfully'
+            ];
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
 }

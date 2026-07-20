@@ -94,6 +94,41 @@ class WhatsAppController extends Controller
             \Illuminate\Support\Facades\Cache::forget('whatsapp_gateway_qr');
         }
 
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Get QR Code for OpenWA Gateway pairing.
+     */
+    public function getOpenWaQrCode()
+    {
+        return response()->json(\App\Services\OpenWaService::getQrCode());
+    }
+
+    /**
+     * Get 8-digit phone pairing code for OpenWA Gateway.
+     */
+    public function getOpenWaPairingCode(Request $request)
+    {
+        return response()->json(\App\Services\OpenWaService::getPairingCode($request->phone ?? '6281222827630'));
+    }
+
+    /**
+     * Start / Pair OpenWA session.
+     */
+    public function pairOpenWaSession()
+    {
+        return response()->json(\App\Services\OpenWaService::startSession());
+    }
+
+    /**
+     * Unpair / Disconnect OpenWA session.
+     */
+    public function unpairOpenWaSession()
+    {
+        return response()->json(\App\Services\OpenWaService::stopSession());
+    }
+
         return response()->json(['status' => 'success']);
     }
 
