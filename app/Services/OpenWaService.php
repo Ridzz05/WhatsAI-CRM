@@ -55,14 +55,6 @@ class OpenWaService
      */
     public static function getStatus()
     {
-        // Check if session has been manually unpaired
-        if (\Illuminate\Support\Facades\Cache::get('openwa_session_unpaired', false)) {
-            return [
-                'status' => 'UNPAIRED',
-                'connected' => false
-            ];
-        }
-
         $baseUrl = env('OPENWA_BASE_URL', 'http://localhost:2785');
         $apiKey = env('OPENWA_API_KEY', '');
 
@@ -72,12 +64,31 @@ class OpenWaService
                 $client = $client->withHeaders(['X-API-Key' => $apiKey]);
             }
 
-            $response = $client->get("{$baseUrl}/api/health");
-            if ($response->successful()) {
-                $data = $response->json();
-                $data['connected'] = true;
-                return $data;
+            // 1. Health check to see if OpenWA server process is running
+            $healthRes = $client->get("{$baseUrl}/api/health");
+            if (!$healthRes->successful()) {
+                return [
+                    'status' => 'OFFLINE',
+                    'connected' => false
+                ];
             }
+
+            // 2. Fetch active sessions list to verify actual WhatsApp connection
+            $sessionsRes = $client->get("{$baseUrl}/api/sessions");
+            $sessions = $sessionsRes->successful() ? $sessionsRes->json() : [];
+
+            // If no sessions exist or manually marked as unpaired:
+            $isUnpairedCache = \Illuminate\Support\Facades\Cache::get('openwa_session_unpaired', false);
+            if (empty($sessions) || $isUnpairedCache) {
+                return [
+                    'status' => 'UNPAIRED',
+                    'connected' => false
+                ];
+            }
+
+            $data = $healthRes->json();
+            $data['connected'] = true;
+            return $data;
         } catch (\Exception $e) {
             // Ignore connection errors
         }
