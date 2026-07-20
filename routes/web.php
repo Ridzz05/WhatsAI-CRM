@@ -55,6 +55,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('Broadcast');
     })->name('crm.broadcast');
 
+    Route::get('/dashboard/quick-send', function () {
+        return Inertia::render('QuickSend');
+    })->name('crm.quick-send');
+
     Route::get('/dashboard/status', function () {
         return Inertia::render('JadwalStatus');
     })->name('crm.status');

@@ -15,7 +15,8 @@ import {
     Question,
     SquaresFour,
     CirclesThree,
-    Broadcast
+    Broadcast,
+    Lightning
 } from '@phosphor-icons/react';
 
 export default function AdminLayout({ children, activeTab = 'dashboard', title = 'CRM Console' }) {
@@ -49,6 +50,12 @@ export default function AdminLayout({ children, activeTab = 'dashboard', title =
             label: 'Broadcast Pesan',
             icon: Broadcast,
             href: route('crm.broadcast'),
+        },
+        {
+            id: 'quicksend',
+            label: 'Kirim Cepat',
+            icon: Lightning,
+            href: route('crm.quick-send'),
         },
         {
             id: 'status',
