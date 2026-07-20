@@ -259,6 +259,8 @@ class WhatsAppController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Missing sender/message parameter'], 400);
         }
 
+        \Illuminate\Support\Facades\Log::info("📨 [WhatsApp Webhook] Incoming message from {$phone}: '{$messageText}'");
+
         // Process chat and generate AI response
         $result = $this->processIncomingMessage($phone, $messageText, null);
         $aiResponse = $result['ai_response'] ?? null;
@@ -538,7 +540,8 @@ class WhatsAppController extends Controller
                 'list' => $list
             ];
         } elseif ($isHumanManaged || $isMutedByCache) {
-            // Mute the AI once it has been handed over to human CS agents or manual activity is detected
+            $reason = $isHumanManaged ? "Status is '{$lead->status}'" : "30-min HP Debounce Cache Active";
+            \Illuminate\Support\Facades\Log::warning("🛑 [WhatsApp AI] Auto-Reply muted for {$phone}. Reason: {$reason}.");
             return [
                 'lead' => $lead,
                 'ai_response' => null
@@ -643,6 +646,7 @@ class WhatsAppController extends Controller
                 ->toArray();
 
             $aiResponse = AiService::generateResponse($prompt, $chatHistory);
+            \Illuminate\Support\Facades\Log::info("🤖 [WhatsApp AI] Auto-Reply generated for {$phone}: '{$aiResponse}'");
         }
 
         // Save AI reply
@@ -778,6 +782,7 @@ class WhatsAppController extends Controller
 
         // Cache mute state for 30 minutes (debounce timer)
         \Illuminate\Support\Facades\Cache::put("whatsapp_mute_ai_{$phone}", true, now()->addMinutes(30));
+        \Illuminate\Support\Facades\Log::info("👤 [WhatsApp CS] Manual CS activity detected on HP for {$phone}. AI Muted for 30 minutes.");
 
         // Update Lead status to Handover to CS so agents know it is under manual handling
         $lead = Lead::where('phone', $phone)->first();
