@@ -76,14 +76,23 @@ export default function DeviceConnected({ auth }) {
         setTimeout(() => setCopied(false), 2000);
     };
 
-    // Poll QR Code every 3s when pairing modal is open
+    // Poll QR Code every 3s when pairing modal is open & auto-close when authenticated
     useEffect(() => {
         let timer;
         if (showPairModal && pairingMode === 'qr') {
             const fetchQr = () => {
                 axios.get(route('crm.openwa.qr'))
                     .then(res => {
-                        if (res.data && res.data.qr) {
+                        if (res.data?.authenticated === true) {
+                            setShowPairModal(false);
+                            setIsConnected(true);
+                            setAlertData({
+                                type: 'success',
+                                title: 'WhatsApp Terhubung!',
+                                message: 'Perangkat WhatsApp berhasil diautentikasi dan ditautkan.'
+                            });
+                            fetchStatus();
+                        } else if (res.data && res.data.qr) {
                             setQrCodeData(res.data.qr);
                         }
                     })
@@ -101,6 +110,7 @@ export default function DeviceConnected({ auth }) {
 
     // 1. Handle Pair Device
     const handlePairDevice = () => {
+        setQrCodeData(null);
         setActionLoading(true);
         setShowPairModal(true);
 

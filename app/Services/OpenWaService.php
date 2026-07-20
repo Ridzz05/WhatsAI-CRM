@@ -217,11 +217,11 @@ class OpenWaService
             }
 
             // Ensure session is started first
-            $client->post("{$baseUrl}/api/sessions/{$uuid}/start");
+            $startRes = $client->post("{$baseUrl}/api/sessions/{$uuid}/start");
 
             $response = $client->get("{$baseUrl}/api/sessions/{$uuid}/qr");
             if ($response->successful()) {
-                $rawQr = $response->json()['qr'] ?? $response->json()['code'] ?? $response->body();
+                $rawQr = $response->json()['qr'] ?? $response->json()['qrCode'] ?? $response->json()['code'] ?? $response->body();
                 // Build dynamic QR Image URL if raw string
                 $qrImg = (str_starts_with($rawQr, 'data:') || str_starts_with($rawQr, 'http'))
                     ? $rawQr
@@ -229,10 +229,21 @@ class OpenWaService
 
                 return [
                     'success' => true,
+                    'authenticated' => false,
                     'qr' => $qrImg,
                     'rawQr' => $rawQr,
                     'data' => $response->json()
                 ];
+            } else {
+                $msg = strtolower($response->json()['message'] ?? '');
+                if (str_contains($msg, 'authenticated') || str_contains($msg, 'ready') || str_contains($msg, 'already started')) {
+                    \Illuminate\Support\Facades\Cache::forget('openwa_session_unpaired');
+                    return [
+                        'success' => true,
+                        'authenticated' => true,
+                        'message' => 'Session already authenticated'
+                    ];
+                }
             }
         } catch (\Exception $e) {
             Log::error("OpenWA QR Error: " . $e->getMessage());
@@ -240,6 +251,7 @@ class OpenWaService
 
         return [
             'success' => false,
+            'authenticated' => false,
             'message' => 'Failed to fetch QR Code from OpenWA'
         ];
     }
