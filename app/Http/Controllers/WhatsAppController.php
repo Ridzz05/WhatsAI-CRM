@@ -98,6 +98,15 @@ class WhatsAppController extends Controller
     }
 
     /**
+     * Get OpenWA Gateway health and status information.
+     */
+    public function getOpenWaStatus()
+    {
+        $status = \App\Services\OpenWaService::getStatus();
+        return response()->json($status);
+    }
+
+    /**
      * Assign lead to a user/CS agent.
      */
     public function assignLead(Request $request, Lead $lead)
@@ -168,36 +177,67 @@ class WhatsAppController extends Controller
     }
 
     /**
-     * Real Production WhatsApp Webhook (Ex: Fonnte/Wablas integration).
+     * Real Production WhatsApp Webhook (Supports OpenWA & Gateway REST integrations).
      * Excluded from CSRF validation in bootstrap/app.php.
      */
     public function handleWebhook(Request $request)
     {
-        // Fonnte webhook parameter mapping
-        $phone = $request->input('sender'); 
-        $messageText = $request->input('message');
+        // 1. Detect OpenWA Event Payloads
+        $event = $request->input('event') ?? $request->input('type');
+        $data = $request->input('data') ?? $request->all();
+
+        // Handle outgoing manual message event from OpenWA (triggers 10-minute Auto-Mute)
+        $isFromMe = $data['fromMe'] ?? $data['key']['fromMe'] ?? false;
+        if ($isFromMe || $event === 'message.sent') {
+            $senderJid = $data['from'] ?? $data['to'] ?? $data['sender'] ?? '';
+            $phone = preg_replace('/[^0-9]/', '', $senderJid);
+            if (!empty($phone)) {
+                $this->handleManualActivity(new Request(['phone' => $phone]));
+            }
+            return response()->json(['status' => 'ignored', 'reason' => 'outgoing_manual_message']);
+        }
+
+        // Extract sender and message text
+        $phone = $request->input('sender') 
+                 ?? $data['from'] 
+                 ?? $data['author'] 
+                 ?? '';
         
+        $messageText = $request->input('message') 
+                      ?? $data['body'] 
+                      ?? $data['text'] 
+                      ?? '';
+        
+        // Normalize phone number (strip @s.whatsapp.net / @lid)
+        $phone = preg_replace('/[^0-9]/', '', $phone);
+
         if (empty($phone) || empty($messageText)) {
             return response()->json(['status' => 'error', 'message' => 'Missing sender/message parameter'], 400);
         }
 
         // Process chat and generate AI response
         $result = $this->processIncomingMessage($phone, $messageText, null);
-        
-        // Outgoing API trigger to reply message back to user's phone via Fonnte Gateway
-        $token = env('FONNTE_TOKEN');
-        if (!empty($token)) {
-            \Illuminate\Support\Facades\Http::withHeaders([
-                'Authorization' => $token,
-            ])->post('https://api.fonnte.com/send', [
-                'target' => $phone,
-                'message' => $result['ai_response'],
-            ]);
+        $aiResponse = $result['ai_response'] ?? null;
+
+        if (!empty($aiResponse)) {
+            // Reply via OpenWA Gateway Service if active
+            \App\Services\OpenWaService::sendMessage($phone, $aiResponse);
+
+            // Optional Fonnte fallback
+            $token = env('FONNTE_TOKEN');
+            if (!empty($token)) {
+                \Illuminate\Support\Facades\Http::withHeaders([
+                    'Authorization' => $token,
+                ])->post('https://api.fonnte.com/send', [
+                    'target' => $phone,
+                    'message' => $aiResponse,
+                ]);
+            }
         }
 
         $responseData = [
             'status' => 'success',
-            'ai_response' => $result['ai_response']
+            'ai_response' => $aiResponse
         ];
         if (isset($result['list'])) {
             $responseData['list'] = $result['list'];

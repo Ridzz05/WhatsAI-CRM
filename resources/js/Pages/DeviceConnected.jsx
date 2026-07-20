@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { 
     DeviceMobile, 
-    CheckCircle, 
-    XCircle, 
     ArrowClockwise, 
     QrCode, 
     Cpu, 
@@ -13,31 +11,42 @@ import {
     ShieldCheck,
     Broadcast,
     Copy,
-    Check
+    Check,
+    Browsers
 } from '@phosphor-icons/react';
 
 export default function DeviceConnected({ auth }) {
     const [isConnected, setIsConnected] = useState(true);
     const [loading, setLoading] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [openWaStatus, setOpenWaStatus] = useState(null);
 
     const deviceStats = {
         phone: "+62 812-2282-7630",
         pushName: "Loyal Fitness AI Assistant",
-        platform: "Baileys WhatsApp Web Socket v6.7.0",
-        port: 3000,
+        platform: "OpenWA Gateway Server (Baileys Engine)",
+        port: 2785,
         laravelPort: 8001,
-        battery: 95,
+        battery: 98,
         lastSeen: "Online (Real-time)",
-        statusMessage: "Socket terhubung aktif ke WhatsApp Multi-Device."
+        swaggerUrl: "http://localhost:2785/api/docs"
     };
 
-    const handleRefresh = () => {
+    const fetchStatus = () => {
         setLoading(true);
-        setTimeout(() => {
-            setLoading(false);
-        }, 1000);
+        fetch(route('crm.openwa.status'))
+            .then(res => res.json())
+            .then(data => {
+                setOpenWaStatus(data);
+                setIsConnected(data?.connected ?? true);
+            })
+            .catch(() => {})
+            .finally(() => setLoading(false));
     };
+
+    useEffect(() => {
+        fetchStatus();
+    }, []);
 
     const copyWebhook = () => {
         navigator.clipboard.writeText("http://localhost:8001/api/whatsapp/webhook");
@@ -53,7 +62,7 @@ export default function DeviceConnected({ auth }) {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-[#ebe6dd]/10">
                 <div>
                     <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-3">
-                        Perangkat Terhubung
+                        Perangkat Terhubung (OpenWA Stack)
                         <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider ${
                             isConnected 
                                 ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' 
@@ -64,18 +73,28 @@ export default function DeviceConnected({ auth }) {
                         </span>
                     </h1>
                     <p className="text-xs text-[#f5efe4]/60 mt-1">
-                        Kelola koneksi Baileys WhatsApp Socket Gateway untuk sinkronisasi pesan & AI Auto-responder.
+                        Kelola koneksi OpenWA API Gateway Server untuk sinkronisasi pesan WhatsApp & OpenAI Auto-responder.
                     </p>
                 </div>
 
                 <div className="flex items-center gap-3">
+                    <a
+                        href={deviceStats.swaggerUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#e98425]/15 hover:bg-[#e98425]/25 text-[#e98425] text-xs font-bold border border-[#e98425]/30 transition-all"
+                    >
+                        <Browsers className="w-4 h-4" weight="bold" />
+                        Swagger API Docs
+                    </a>
+
                     <button 
-                        onClick={handleRefresh}
+                        onClick={fetchStatus}
                         disabled={loading}
                         className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white text-xs font-bold border border-white/10 transition-all disabled:opacity-50"
                     >
                         <ArrowClockwise className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} weight="bold" />
-                        Refresh Socket Status
+                        Refresh Status
                     </button>
                 </div>
             </div>
@@ -101,7 +120,7 @@ export default function DeviceConnected({ auth }) {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-[#ebe6dd]/10">
                         <div className="bg-white/5 rounded-xl p-3.5 border border-white/5">
-                            <span className="text-[10px] font-mono uppercase tracking-wider text-[#f5efe4]/40 block mb-1">Session Engine</span>
+                            <span className="text-[10px] font-mono uppercase tracking-wider text-[#f5efe4]/40 block mb-1">Gateway Engine</span>
                             <span className="text-xs font-bold text-white flex items-center gap-2">
                                 <Cpu className="w-4 h-4 text-[#e98425]" /> {deviceStats.platform}
                             </span>
@@ -122,9 +141,9 @@ export default function DeviceConnected({ auth }) {
                         </div>
 
                         <div className="bg-white/5 rounded-xl p-3.5 border border-white/5">
-                            <span className="text-[10px] font-mono uppercase tracking-wider text-[#f5efe4]/40 block mb-1">Port Server</span>
+                            <span className="text-[10px] font-mono uppercase tracking-wider text-[#f5efe4]/40 block mb-1">Port Service</span>
                             <span className="text-xs font-bold font-mono text-white flex items-center gap-2">
-                                <Broadcast className="w-4 h-4 text-[#e98425]" /> Gateway :{deviceStats.port} | CRM :{deviceStats.laravelPort}
+                                <Broadcast className="w-4 h-4 text-[#e98425]" /> OpenWA :{deviceStats.port} | CRM :{deviceStats.laravelPort}
                             </span>
                         </div>
                     </div>
@@ -144,12 +163,12 @@ export default function DeviceConnected({ auth }) {
                     <div className="my-6 p-4 bg-white rounded-2xl border-4 border-[#e98425]/30 shadow-2xl flex flex-col items-center justify-center">
                         <div className="w-36 h-36 bg-emerald-50 rounded-xl flex flex-col items-center justify-center p-3 text-center">
                             <ShieldCheck className="w-16 h-16 text-emerald-600 mb-2" weight="duotone" />
-                            <span className="text-[10px] font-bold text-emerald-900 leading-tight">Perangkat Aktif & Terverifikasi</span>
+                            <span className="text-[10px] font-bold text-emerald-900 leading-tight">Session OpenWA Terverifikasi</span>
                         </div>
                     </div>
 
                     <p className="text-[11px] text-[#f5efe4]/50 leading-relaxed">
-                        Akun WhatsApp utama sudah berhasil dipairing dengan gateway server. AI Auto-responder aktif secara otomatis.
+                        Sesi WhatsApp utama sudah terhubung dengan OpenWA REST Gateway. Modul Auto-Mute 10 menit & AI Responder aktif.
                     </p>
                 </div>
             </div>
@@ -157,7 +176,7 @@ export default function DeviceConnected({ auth }) {
             {/* Webhook Configuration & Health */}
             <div className="bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-6">
                 <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-                    <Broadcast className="w-4 h-4 text-[#e98425]" /> Konfigurasi Webhook Gateway
+                    <Broadcast className="w-4 h-4 text-[#e98425]" /> Konfigurasi Webhook Gateway (OpenWA)
                 </h3>
 
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 p-4 rounded-xl bg-white/5 border border-white/5">

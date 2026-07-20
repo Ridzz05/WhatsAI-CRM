@@ -51,6 +51,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('Templates');
     })->name('crm.templates');
 
+    Route::get('/dashboard/openwa/status', [\App\Http\Controllers\WhatsAppController::class, 'getOpenWaStatus'])->name('crm.openwa.status');
+
     // System self-update & Lead chat reset
     Route::post('/dashboard/system/update', [\App\Http\Controllers\WhatsAppController::class, 'runSystemUpdate'])->name('crm.system.update');
     Route::post('/dashboard/leads/{id}/reset', [\App\Http\Controllers\WhatsAppController::class, 'resetLeadChat'])->name('crm.leads.reset');
