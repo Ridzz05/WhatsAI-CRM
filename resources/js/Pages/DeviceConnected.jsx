@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { Head, router } from '@inertiajs/react';
 import axios from 'axios';
 import AdminLayout from '@/Layouts/AdminLayout';
+import Breadcrumb from '@/Components/Breadcrumb';
+import Alert from '@/Components/Alert';
+import ConfirmModal from '@/Components/ConfirmModal';
 import { 
     DeviceMobile, 
     ArrowClockwise, 
@@ -27,6 +30,10 @@ export default function DeviceConnected({ auth }) {
     const [actionLoading, setActionLoading] = useState(false);
     const [copied, setCopied] = useState(false);
     const [openWaStatus, setOpenWaStatus] = useState(null);
+    const [alertData, setAlertData] = useState(null);
+
+    // Confirm Unpair Modal State
+    const [showUnpairModal, setShowUnpairModal] = useState(false);
 
     // Pair Modal & Code State
     const [showPairModal, setShowPairModal] = useState(false);
@@ -67,16 +74,13 @@ export default function DeviceConnected({ auth }) {
         setTimeout(() => setCopied(false), 2000);
     };
 
-    // 1. Handle Pair Device (Start Session & Fetch QR / Code)
+    // 1. Handle Pair Device
     const handlePairDevice = async () => {
         setActionLoading(true);
         setShowPairModal(true);
 
         try {
-            // Start OpenWA Session
             await axios.post(route('crm.openwa.pair'));
-            
-            // Fetch QR Code
             const qrRes = await axios.get(route('crm.openwa.qr'));
             if (qrRes.data && qrRes.data.qr) {
                 setQrCodeData(qrRes.data.qr);
@@ -101,7 +105,7 @@ export default function DeviceConnected({ auth }) {
             if (res.data && res.data.code) {
                 setPairingCode(res.data.code);
             } else {
-                setPairingCode('8372-9104'); // Fallback simulation code if gateway pending
+                setPairingCode('8372-9104');
             }
         } catch (e) {
             setPairingCode('8372-9104');
@@ -110,19 +114,25 @@ export default function DeviceConnected({ auth }) {
         }
     };
 
-    // 2. Handle Unpair Device (Disconnect Session)
-    const handleUnpairDevice = async () => {
-        if (!confirm('Apakah Anda yakin ingin memutus koneksi (unpair) perangkat WhatsApp dari OpenWA Gateway?')) {
-            return;
-        }
-
+    // 2. Handle Unpair Device Execution
+    const executeUnpair = async () => {
+        setShowUnpairModal(false);
         setActionLoading(true);
+
         try {
             await axios.post(route('crm.openwa.unpair'));
             setIsConnected(false);
-            alert('Perangkat WhatsApp berhasil diputus (unpaired). Sesi dihentikan.');
+            setAlertData({
+                type: 'warning',
+                title: 'Perangkat Diputus',
+                message: 'Perangkat WhatsApp berhasil diputus (unpaired). Sesi dihentikan.'
+            });
         } catch (e) {
-            alert('Gagal memutus koneksi: ' + e.message);
+            setAlertData({
+                type: 'error',
+                title: 'Gagal Memutus Koneksi',
+                message: e.message
+            });
         } finally {
             setActionLoading(false);
             fetchStatus();
@@ -133,8 +143,23 @@ export default function DeviceConnected({ auth }) {
         <AdminLayout activeTab="device" title="Status Perangkat WhatsApp Gateway">
             <Head title="Device Connected - WhatsAI CRM" />
 
+            {/* Reusable Breadcrumb Component */}
+            <Breadcrumb items={[{ label: 'Device Connected' }]} />
+
+            {/* Reusable Alert Component */}
+            {alertData && (
+                <div className="mb-4">
+                    <Alert 
+                        type={alertData.type}
+                        title={alertData.title}
+                        message={alertData.message}
+                        onClose={() => setAlertData(null)}
+                    />
+                </div>
+            )}
+
             {/* Page Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-[#ebe6dd]/10">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-[#ebe6dd]/10 mb-6">
                 <div>
                     <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-3">
                         Perangkat Terhubung (OpenWA Stack)
@@ -156,7 +181,7 @@ export default function DeviceConnected({ auth }) {
                     {/* Action Buttons: Pair vs Unpair */}
                     {isConnected ? (
                         <button
-                            onClick={handleUnpairDevice}
+                            onClick={() => setShowUnpairModal(true)}
                             disabled={actionLoading}
                             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-500/15 hover:bg-red-500/25 text-red-400 text-xs font-bold border border-red-500/30 transition-all disabled:opacity-50"
                         >
@@ -196,7 +221,7 @@ export default function DeviceConnected({ auth }) {
             </div>
 
             {/* Grid Status Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 
                 {/* Device Info Card */}
                 <div className="md:col-span-2 bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-6 relative overflow-hidden">
@@ -276,7 +301,7 @@ export default function DeviceConnected({ auth }) {
 
                     {isConnected ? (
                         <button
-                            onClick={handleUnpairDevice}
+                            onClick={() => setShowUnpairModal(true)}
                             className="w-full py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold border border-red-500/30 transition-all flex items-center justify-center gap-2"
                         >
                             <Plugs className="w-4 h-4" /> Putus Koneksi (Unpair)
@@ -291,6 +316,18 @@ export default function DeviceConnected({ auth }) {
                     )}
                 </div>
             </div>
+
+            {/* Reusable ConfirmModal for Unpairing Confirmation */}
+            <ConfirmModal 
+                isOpen={showUnpairModal}
+                title="Putus Koneksi Device?"
+                message="Apakah Anda yakin ingin memutus koneksi (unpair) perangkat WhatsApp dari OpenWA Gateway?"
+                confirmText="Ya, Unpair Device"
+                cancelText="Batal"
+                type="danger"
+                onConfirm={executeUnpair}
+                onCancel={() => setShowUnpairModal(false)}
+            />
 
             {/* PAIRING MODAL */}
             {showPairModal && (

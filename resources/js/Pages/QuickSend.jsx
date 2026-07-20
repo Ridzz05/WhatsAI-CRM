@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import axios from 'axios';
 import AdminLayout from '@/Layouts/AdminLayout';
+import Breadcrumb from '@/Components/Breadcrumb';
+import Alert from '@/Components/Alert';
+import ConfirmModal from '@/Components/ConfirmModal';
 import { 
     PaperPlaneTilt, 
     Sparkle, 
@@ -28,6 +31,8 @@ export default function QuickSend({ auth, logs = [] }) {
     const [isAiLoading, setIsAiLoading] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [alertData, setAlertData] = useState(null);
+    const [deleteTargetId, setDeleteTargetId] = useState(null);
 
     // Format Helpers
     const insertFormat = (symbol) => {
@@ -102,8 +107,18 @@ export default function QuickSend({ auth, logs = [] }) {
     };
 
     const handleDeleteLog = (id) => {
-        if (confirm('Hapus riwayat pengiriman ini?')) {
-            router.delete(route('crm.quick-send.destroy', id));
+        setDeleteTargetId(id);
+    };
+
+    const confirmDeleteLog = () => {
+        if (deleteTargetId) {
+            router.delete(route('crm.quick-send.destroy', deleteTargetId));
+            setDeleteTargetId(null);
+            setAlertData({
+                type: 'success',
+                title: 'Riwayat Dihapus',
+                message: 'Riwayat pengiriman berhasil dihapus dari database.'
+            });
         }
     };
 
@@ -116,6 +131,33 @@ export default function QuickSend({ auth, logs = [] }) {
     return (
         <AdminLayout activeTab="quicksend" title="Kirim Cepat (Quick Send) — WhatsAI">
             <Head title="Kirim Cepat (Quick Send) - WhatsAI CRM" />
+
+            {/* Reusable Breadcrumb Component */}
+            <Breadcrumb items={[{ label: 'Kirim Cepat (Quick Send)' }]} />
+
+            {/* Reusable Alert Component */}
+            {alertData && (
+                <div className="mb-4">
+                    <Alert 
+                        type={alertData.type}
+                        title={alertData.title}
+                        message={alertData.message}
+                        onClose={() => setAlertData(null)}
+                    />
+                </div>
+            )}
+
+            {/* Reusable ConfirmModal for Log Deletion */}
+            <ConfirmModal 
+                isOpen={!!deleteTargetId}
+                title="Hapus Riwayat Pengiriman?"
+                message="Apakah Anda yakin ingin menghapus catatan riwayat pengiriman ini secara permanen?"
+                confirmText="Ya, Hapus"
+                cancelText="Batal"
+                type="danger"
+                onConfirm={confirmDeleteLog}
+                onCancel={() => setDeleteTargetId(null)}
+            />
 
             {/* Page Header */}
             <div className="pb-4 border-b border-[#ebe6dd]/10 mb-6">
