@@ -110,23 +110,35 @@ class WhatsAppController extends Controller
      */
     public function getOpenWaPairingCode(Request $request)
     {
-        return response()->json(\App\Services\OpenWaService::getPairingCode($request->phone));
+        $res = \App\Services\OpenWaService::getPairingCode($request->phone);
+        if ($request->header('X-Inertia')) {
+            return redirect()->back()->with('success', 'Kode pairing berhasil dibuat.')->with('code', $res['code'] ?? null);
+        }
+        return response()->json($res);
     }
 
     /**
      * Start / Pair OpenWA session.
      */
-    public function pairOpenWaSession()
+    public function pairOpenWaSession(Request $request)
     {
-        return response()->json(\App\Services\OpenWaService::startSession());
+        $res = \App\Services\OpenWaService::startSession();
+        if ($request->header('X-Inertia')) {
+            return redirect()->back()->with('success', 'Sesi WhatsApp berhasil dihubungkan.');
+        }
+        return response()->json($res);
     }
 
     /**
      * Unpair / Disconnect OpenWA session.
      */
-    public function unpairOpenWaSession()
+    public function unpairOpenWaSession(Request $request)
     {
-        return response()->json(\App\Services\OpenWaService::stopSession());
+        $res = \App\Services\OpenWaService::stopSession();
+        if ($request->header('X-Inertia')) {
+            return redirect()->back()->with('success', 'Perangkat WhatsApp berhasil diputus (unpaired).');
+        }
+        return response()->json($res);
     }
 
     /**
