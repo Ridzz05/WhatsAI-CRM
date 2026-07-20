@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
+import axios from 'axios';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { 
     PaperPlaneTilt, 
@@ -18,17 +19,15 @@ import {
     CaretDown
 } from '@phosphor-icons/react';
 
-export default function QuickSend({ auth }) {
+export default function QuickSend({ auth, logs = [] }) {
     // Form States
     const [selectedChannel, setSelectedChannel] = useState('openwa');
     const [recipients, setRecipients] = useState('');
     const [messageText, setMessageText] = useState('');
     const [activeAiTab, setActiveAiTab] = useState('gaya'); // 'gaya', 'buat', 'audit'
     const [isAiLoading, setIsAiLoading] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-
-    // History Log State
-    const [logs, setLogs] = useState([]);
 
     // Format Helpers
     const insertFormat = (symbol) => {
@@ -42,12 +41,23 @@ export default function QuickSend({ auth }) {
         setMessageText(prev => prev + ` {{${varName}}}`);
     };
 
-    // AI Style Application
-    const applyAiStyle = (styleType) => {
+    // Real-time AI Style Polish via Backend Endpoint (/api/ai/polish)
+    const applyAiStyle = async (styleType) => {
         if (!messageText.trim()) return;
         setIsAiLoading(true);
 
-        setTimeout(() => {
+        try {
+            const res = await axios.post(route('api.ai.polish'), {
+                text: messageText,
+                style: styleType
+            });
+
+            if (res.data && res.data.polished_text) {
+                setMessageText(res.data.polished_text);
+            }
+        } catch (e) {
+            console.warn('AI Polish fallback client-side active:', e.message);
+            // Client-side fallback if offline
             if (styleType === 'marketing') {
                 setMessageText(`🔥 PROMO SPESIAL HARI INI! 🔥\n\nHalo {{nama}},\n${messageText}\n\nKlaim diskon khusus Anda sekarang sebelum slot habis! 🚀`);
             } else if (styleType === 'formal') {
@@ -63,34 +73,45 @@ export default function QuickSend({ auth }) {
             } else if (styleType === 'optimalkan') {
                 setMessageText(`Halo {{nama}}, ${messageText} 🙏`);
             }
+        } finally {
             setIsAiLoading(false);
-        }, 600);
+        }
     };
 
+    // Live Form Submission to Laravel Backend
     const handleSendQuick = (e) => {
         e.preventDefault();
         if (!recipients.trim() || !messageText.trim()) return;
 
-        const recipientList = recipients.split(/[\n,]+/).map(r => r.trim()).filter(Boolean);
+        setIsSubmitting(true);
 
-        const newLogs = recipientList.map((r, idx) => ({
-            id: Date.now() + idx,
-            recipient: r.includes('|') ? r.split('|')[0] : r,
-            name: r.includes('|') ? r.split('|')[1] : 'Pelanggan',
-            message: messageText.replace(/{{nama}}/g, r.includes('|') ? r.split('|')[1] : 'Kakak'),
-            sentAt: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB',
-            status: 'terkirim'
-        }));
-
-        setLogs([...newLogs, ...logs]);
-        setRecipients('');
-        setMessageText('');
-        alert(`Pesan berhasil dikirim secara instan ke ${recipientList.length} nomor tujuan!`);
+        router.post(route('crm.quick-send.send'), {
+            recipients: recipients,
+            message: messageText,
+            channel: selectedChannel
+        }, {
+            onSuccess: () => {
+                setRecipients('');
+                setMessageText('');
+                setIsSubmitting(false);
+            },
+            onError: () => {
+                setIsSubmitting(false);
+            }
+        });
     };
 
     const handleDeleteLog = (id) => {
-        setLogs(logs.filter(l => l.id !== id));
+        if (confirm('Hapus riwayat pengiriman ini?')) {
+            router.delete(route('crm.quick-send.destroy', id));
+        }
     };
+
+    const filteredLogs = logs.filter(l => 
+        (l.phone && l.phone.includes(searchQuery)) || 
+        (l.name && l.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (l.message && l.message.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
 
     return (
         <AdminLayout activeTab="quicksend" title="Kirim Cepat (Quick Send) — WhatsAI">
@@ -216,28 +237,32 @@ export default function QuickSend({ auth }) {
                                     <button 
                                         type="button"
                                         onClick={() => applyAiStyle('optimalkan')}
-                                        className="px-2 py-0.5 rounded text-[10.5px] font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 transition-all"
+                                        disabled={isAiLoading}
+                                        className="px-2 py-0.5 rounded text-[10.5px] font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 transition-all disabled:opacity-50"
                                     >
                                         ✨ Optimalkan
                                     </button>
                                     <button 
                                         type="button"
                                         onClick={() => applyAiStyle('marketing')}
-                                        className="px-2 py-0.5 rounded text-[10.5px] font-bold bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 transition-all"
+                                        disabled={isAiLoading}
+                                        className="px-2 py-0.5 rounded text-[10.5px] font-bold bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 transition-all disabled:opacity-50"
                                     >
                                         🔥 Marketing
                                     </button>
                                     <button 
                                         type="button"
                                         onClick={() => applyAiStyle('santai')}
-                                        className="px-2 py-0.5 rounded text-[10.5px] font-bold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition-all"
+                                        disabled={isAiLoading}
+                                        className="px-2 py-0.5 rounded text-[10.5px] font-bold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition-all disabled:opacity-50"
                                     >
                                         🥤 Santai
                                     </button>
                                     <button 
                                         type="button"
                                         onClick={() => applyAiStyle('formal')}
-                                        className="px-2 py-0.5 rounded text-[10.5px] font-bold bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/30 transition-all"
+                                        disabled={isAiLoading}
+                                        className="px-2 py-0.5 rounded text-[10.5px] font-bold bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/30 transition-all disabled:opacity-50"
                                     >
                                         💼 Formal
                                     </button>
@@ -270,10 +295,11 @@ export default function QuickSend({ auth }) {
                         {/* 5. ACTION BUTTON */}
                         <button
                             type="submit"
-                            className="w-full py-3.5 rounded-xl bg-[#6366f1] hover:bg-[#4f46e5] text-white text-xs font-extrabold shadow-lg shadow-indigo-500/20 transition-all flex items-center justify-center gap-2"
+                            disabled={isSubmitting}
+                            className="w-full py-3.5 rounded-xl bg-[#6366f1] hover:bg-[#4f46e5] text-white text-xs font-extrabold shadow-lg shadow-indigo-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                         >
                             <PaperPlaneTilt className="w-4 h-4" weight="bold" />
-                            Kirim Sekarang
+                            {isSubmitting ? 'Mengirim Pesan...' : 'Kirim Sekarang'}
                         </button>
 
                     </form>
@@ -317,7 +343,7 @@ export default function QuickSend({ auth }) {
                                 type="button"
                                 onClick={() => applyAiStyle('marketing')}
                                 disabled={isAiLoading}
-                                className="py-2.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-white font-medium flex items-center justify-center gap-2 transition-all"
+                                className="py-2.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-white font-medium flex items-center justify-center gap-2 transition-all disabled:opacity-50"
                             >
                                 🔥 Marketing
                             </button>
@@ -325,7 +351,7 @@ export default function QuickSend({ auth }) {
                                 type="button"
                                 onClick={() => applyAiStyle('formal')}
                                 disabled={isAiLoading}
-                                className="py-2.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-white font-medium flex items-center justify-center gap-2 transition-all"
+                                className="py-2.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-white font-medium flex items-center justify-center gap-2 transition-all disabled:opacity-50"
                             >
                                 💼 Formal
                             </button>
@@ -333,7 +359,7 @@ export default function QuickSend({ auth }) {
                                 type="button"
                                 onClick={() => applyAiStyle('santai')}
                                 disabled={isAiLoading}
-                                className="py-2.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-white font-medium flex items-center justify-center gap-2 transition-all"
+                                className="py-2.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-white font-medium flex items-center justify-center gap-2 transition-all disabled:opacity-50"
                             >
                                 🥤 Santai
                             </button>
@@ -341,7 +367,7 @@ export default function QuickSend({ auth }) {
                                 type="button"
                                 onClick={() => applyAiStyle('profesional')}
                                 disabled={isAiLoading}
-                                className="py-2.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-white font-medium flex items-center justify-center gap-2 transition-all"
+                                className="py-2.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-white font-medium flex items-center justify-center gap-2 transition-all disabled:opacity-50"
                             >
                                 📈 Profesional
                             </button>
@@ -349,7 +375,7 @@ export default function QuickSend({ auth }) {
                                 type="button"
                                 onClick={() => applyAiStyle('mendesak')}
                                 disabled={isAiLoading}
-                                className="py-2.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-white font-medium flex items-center justify-center gap-2 transition-all"
+                                className="py-2.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-white font-medium flex items-center justify-center gap-2 transition-all disabled:opacity-50"
                             >
                                 🚨 Mendesak
                             </button>
@@ -357,7 +383,7 @@ export default function QuickSend({ auth }) {
                                 type="button"
                                 onClick={() => applyAiStyle('ramah')}
                                 disabled={isAiLoading}
-                                className="py-2.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-white font-medium flex items-center justify-center gap-2 transition-all"
+                                className="py-2.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-white font-medium flex items-center justify-center gap-2 transition-all disabled:opacity-50"
                             >
                                 🤗 Ramah
                             </button>
@@ -373,9 +399,9 @@ export default function QuickSend({ auth }) {
                         RIWAYAT PENGIRIMAN
                     </h2>
 
-                    {logs.length > 0 ? (
+                    {filteredLogs.length > 0 ? (
                         <div className="flex flex-col gap-3">
-                            {logs.map((log) => (
+                            {filteredLogs.map((log) => (
                                 <div 
                                     key={log.id}
                                     className="bg-white/5 border border-white/5 rounded-xl p-3.5 flex flex-col gap-2 hover:border-white/15 transition-all"
@@ -383,20 +409,22 @@ export default function QuickSend({ auth }) {
                                     <div className="flex items-center justify-between">
                                         <span className="text-xs font-mono font-bold text-[#e98425] flex items-center gap-1">
                                             <WhatsappLogo className="w-3.5 h-3.5 text-emerald-400" weight="fill" />
-                                            {log.recipient} ({log.name})
+                                            {log.phone} ({log.name || 'Pelanggan'})
                                         </span>
                                         <span className="text-[10px] font-mono text-[#f5efe4]/40">
-                                            {log.sentAt}
+                                            {log.sent_at || log.created_at || 'Baru saja'}
                                         </span>
                                     </div>
 
-                                    <p className="text-xs text-white/80 leading-relaxed bg-[#0d0c0b] p-2.5 rounded-lg border border-white/5">
+                                    <p className="text-xs text-white/80 leading-relaxed bg-[#0d0c0b] p-2.5 rounded-lg border border-white/5 font-sans">
                                         "{log.message}"
                                     </p>
 
                                     <div className="flex items-center justify-between">
-                                        <span className="inline-flex items-center gap-1 text-[10px] font-mono text-emerald-400">
-                                            <CheckCircle className="w-3 h-3" /> Terkirim
+                                        <span className={`inline-flex items-center gap-1 text-[10px] font-mono ${
+                                            log.status === 'terkirim' ? 'text-emerald-400' : 'text-red-400'
+                                        }`}>
+                                            <CheckCircle className="w-3 h-3" /> {log.status === 'terkirim' ? 'Terkirim' : 'Gagal'}
                                         </span>
                                         <button 
                                             onClick={() => handleDeleteLog(log.id)}
