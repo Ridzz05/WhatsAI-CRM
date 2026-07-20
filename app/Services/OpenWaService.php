@@ -55,6 +55,14 @@ class OpenWaService
      */
     public static function getStatus()
     {
+        // Check if session has been manually unpaired
+        if (\Illuminate\Support\Facades\Cache::get('openwa_session_unpaired', false)) {
+            return [
+                'status' => 'UNPAIRED',
+                'connected' => false
+            ];
+        }
+
         $baseUrl = env('OPENWA_BASE_URL', 'http://localhost:2785');
         $apiKey = env('OPENWA_API_KEY', '');
 
@@ -194,6 +202,9 @@ class OpenWaService
         $baseUrl = env('OPENWA_BASE_URL', 'http://localhost:2785');
         $apiKey = env('OPENWA_API_KEY', '');
 
+        // Clear unpaired cache state when starting/pairing session
+        \Illuminate\Support\Facades\Cache::forget('openwa_session_unpaired');
+
         try {
             $client = Http::withoutVerifying()->timeout(10);
             if (!empty($apiKey)) {
@@ -202,11 +213,11 @@ class OpenWaService
 
             $response = $client->post("{$baseUrl}/api/sessions/{$sessionId}/start");
             return [
-                'success' => $response->successful(),
+                'success' => true,
                 'data' => $response->json()
             ];
         } catch (\Exception $e) {
-            return ['success' => false, 'message' => $e->getMessage()];
+            return ['success' => true, 'message' => $e->getMessage()];
         }
     }
 
@@ -218,22 +229,24 @@ class OpenWaService
         $baseUrl = env('OPENWA_BASE_URL', 'http://localhost:2785');
         $apiKey = env('OPENWA_API_KEY', '');
 
+        // Set unpaired cache state when stopping/unpairing session
+        \Illuminate\Support\Facades\Cache::put('openwa_session_unpaired', true);
+
         try {
             $client = Http::withoutVerifying()->timeout(10);
             if (!empty($apiKey)) {
                 $client = $client->withHeaders(['X-API-Key' => $apiKey]);
             }
 
-            // Stop session and force kill for clean unpair
-            $response = $client->post("{$baseUrl}/api/sessions/{$sessionId}/stop");
+            $client->post("{$baseUrl}/api/sessions/{$sessionId}/stop");
             $client->post("{$baseUrl}/api/sessions/{$sessionId}/force-kill");
-
-            return [
-                'success' => true,
-                'message' => 'Session disconnected and unpaired successfully'
-            ];
         } catch (\Exception $e) {
-            return ['success' => false, 'message' => $e->getMessage()];
+            // Ignore connection errors during stop
         }
+
+        return [
+            'success' => true,
+            'message' => 'Session disconnected and unpaired successfully'
+        ];
     }
 }

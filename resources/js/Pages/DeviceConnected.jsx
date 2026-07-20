@@ -60,7 +60,7 @@ export default function DeviceConnected({ auth }) {
         axios.get(route('crm.openwa.status'))
             .then(res => {
                 setOpenWaStatus(res.data);
-                setIsConnected(res.data?.connected ?? true);
+                setIsConnected(res.data?.connected === true);
             })
             .catch(() => {})
             .finally(() => setLoading(false));
