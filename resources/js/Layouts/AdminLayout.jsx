@@ -17,7 +17,8 @@ import {
     CirclesThree,
     Broadcast,
     Lightning,
-    ShieldSlash
+    ShieldSlash,
+    TerminalWindow
 } from '@phosphor-icons/react';
 
 export default function AdminLayout({ children, activeTab = 'dashboard', title = 'CRM Console' }) {
@@ -70,6 +71,13 @@ export default function AdminLayout({ children, activeTab = 'dashboard', title =
             icon: ShieldSlash,
             href: route('crm.held-messages'),
             badge: 'CS Mute'
+        },
+        {
+            id: 'live-logs',
+            label: 'Live System Logs',
+            icon: TerminalWindow,
+            href: route('crm.live-logs'),
+            badge: 'Live'
         },
         {
             id: 'promos',

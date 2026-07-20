@@ -67,6 +67,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/dashboard/held-messages/{id}/restore', [\App\Http\Controllers\HeldMessageController::class, 'restore'])->name('crm.held-messages.restore');
     Route::delete('/dashboard/held-messages/{id}', [\App\Http\Controllers\HeldMessageController::class, 'destroy'])->name('crm.held-messages.destroy');
 
+    Route::get('/dashboard/live-logs', [\App\Http\Controllers\LogStreamController::class, 'index'])->name('crm.live-logs');
+    Route::get('/api/logs/stream', [\App\Http\Controllers\LogStreamController::class, 'fetchLogs'])->name('api.logs.stream');
+    Route::post('/api/logs/clear', [\App\Http\Controllers\LogStreamController::class, 'clearLogs'])->name('api.logs.clear');
+
     Route::post('/api/ai/polish', [\App\Http\Controllers\AiAssistantController::class, 'polish'])->name('api.ai.polish');
 
     Route::get('/dashboard/openwa/status', [\App\Http\Controllers\WhatsAppController::class, 'getOpenWaStatus'])->name('crm.openwa.status');
