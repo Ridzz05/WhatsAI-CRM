@@ -51,6 +51,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('Templates');
     })->name('crm.templates');
 
+    Route::get('/dashboard/broadcast', function () {
+        return Inertia::render('Broadcast');
+    })->name('crm.broadcast');
+
     Route::get('/dashboard/status', function () {
         return Inertia::render('JadwalStatus');
     })->name('crm.status');
