@@ -42,6 +42,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard/settings', [\App\Http\Controllers\WhatsAppController::class, 'settingsPage'])->name('crm.settings');
     Route::post('/dashboard/settings', [\App\Http\Controllers\WhatsAppController::class, 'updateSettings'])->name('crm.settings.update');
     
+    // Device Connected & Message Templates Pages (AUTOIN Suite Architecture)
+    Route::get('/dashboard/device', function () {
+        return Inertia::render('DeviceConnected');
+    })->name('crm.device');
+
+    Route::get('/dashboard/templates', function () {
+        return Inertia::render('Templates');
+    })->name('crm.templates');
+
     // System self-update & Lead chat reset
     Route::post('/dashboard/system/update', [\App\Http\Controllers\WhatsAppController::class, 'runSystemUpdate'])->name('crm.system.update');
     Route::post('/dashboard/leads/{id}/reset', [\App\Http\Controllers\WhatsAppController::class, 'resetLeadChat'])->name('crm.leads.reset');
