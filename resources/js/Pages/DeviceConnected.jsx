@@ -76,6 +76,29 @@ export default function DeviceConnected({ auth }) {
         setTimeout(() => setCopied(false), 2000);
     };
 
+    // Poll QR Code every 3s when pairing modal is open
+    useEffect(() => {
+        let timer;
+        if (showPairModal && pairingMode === 'qr') {
+            const fetchQr = () => {
+                axios.get(route('crm.openwa.qr'))
+                    .then(res => {
+                        if (res.data && res.data.qr) {
+                            setQrCodeData(res.data.qr);
+                        }
+                    })
+                    .catch(() => {});
+            };
+
+            fetchQr();
+            timer = setInterval(fetchQr, 3000);
+        }
+
+        return () => {
+            if (timer) clearInterval(timer);
+        };
+    }, [showPairModal, pairingMode]);
+
     // 1. Handle Pair Device
     const handlePairDevice = () => {
         setActionLoading(true);
@@ -85,13 +108,6 @@ export default function DeviceConnected({ auth }) {
             preserveScroll: true,
             preserveState: true,
             onSuccess: () => {
-                axios.get(route('crm.openwa.qr'))
-                    .then(res => {
-                        if (res.data && res.data.qr) {
-                            setQrCodeData(res.data.qr);
-                        }
-                    })
-                    .catch(() => {});
                 setActionLoading(false);
             },
             onError: () => {
@@ -385,12 +401,19 @@ export default function DeviceConnected({ auth }) {
                         {/* QR Code Tab View */}
                         {pairingMode === 'qr' ? (
                             <div className="flex flex-col items-center justify-center p-4 bg-white/5 border border-white/10 rounded-2xl">
-                                <div className="p-4 bg-white rounded-xl shadow-xl mb-3">
-                                    <img 
-                                        src={qrCodeData || "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=OPENWA-GATEWAY-PAIR-LOVAL-FITNESS"} 
-                                        alt="WhatsApp QR Code"
-                                        className="w-44 h-44 object-contain"
-                                    />
+                                <div className="p-4 bg-white rounded-xl shadow-xl mb-3 min-w-[200px] min-h-[200px] flex items-center justify-center">
+                                    {qrCodeData ? (
+                                        <img 
+                                            src={qrCodeData} 
+                                            alt="WhatsApp QR Code"
+                                            className="w-48 h-48 object-contain"
+                                        />
+                                    ) : (
+                                        <div className="flex flex-col items-center gap-2 p-6 text-center text-[#1a1714]">
+                                            <ArrowClockwise className="w-8 h-8 text-[#e98425] animate-spin" />
+                                            <span className="text-xs font-mono font-bold text-[#1a1714]">Memuat QR Code Baileys...</span>
+                                        </div>
+                                    )}
                                 </div>
                                 <span className="text-[11px] font-mono text-[#f5efe4]/60 text-center">
                                     Buka WhatsApp di HP ➔ Perangkat Tertaut ➔ Tautkan Perangkat ➔ Pindai QR Code di atas.
