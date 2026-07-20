@@ -776,8 +776,8 @@ class WhatsAppController extends Controller
         // Normalize phone number (keep digits only)
         $phone = preg_replace('/[^0-9]/', '', $phone);
 
-        // Cache mute state for 10 minutes (debounce timer)
-        \Illuminate\Support\Facades\Cache::put("whatsapp_mute_ai_{$phone}", true, now()->addMinutes(10));
+        // Cache mute state for 30 minutes (debounce timer)
+        \Illuminate\Support\Facades\Cache::put("whatsapp_mute_ai_{$phone}", true, now()->addMinutes(30));
 
         // Update Lead status to Handover to CS so agents know it is under manual handling
         $lead = Lead::where('phone', $phone)->first();
@@ -799,8 +799,8 @@ class WhatsAppController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'AI muted for phone ' . $phone,
-            'muted_until' => now()->addMinutes(10)->toDateTimeString()
+            'message' => 'AI muted for phone ' . $phone . ' for 30 minutes',
+            'muted_until' => now()->addMinutes(30)->toDateTimeString()
         ]);
     }
 
