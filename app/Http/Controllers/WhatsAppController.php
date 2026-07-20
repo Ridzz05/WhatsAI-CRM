@@ -129,9 +129,6 @@ class WhatsAppController extends Controller
         return response()->json(\App\Services\OpenWaService::stopSession());
     }
 
-        return response()->json(['status' => 'success']);
-    }
-
     /**
      * Get OpenWA Gateway health and status information.
      */
