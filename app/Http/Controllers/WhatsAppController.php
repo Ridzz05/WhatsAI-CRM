@@ -540,8 +540,23 @@ class WhatsAppController extends Controller
                 'list' => $list
             ];
         } elseif ($isHumanManaged || $isMutedByCache) {
-            $reason = $isHumanManaged ? "Status is '{$lead->status}'" : "30-min HP Debounce Cache Active";
-            \Illuminate\Support\Facades\Log::warning("🛑 [WhatsApp AI] Auto-Reply muted for {$phone}. Reason: {$reason}.");
+            $reasonText = $isHumanManaged 
+                ? "Status Handover CS ({$lead->status})" 
+                : "Aktivitas CS Manual di HP (Mute 30 Menit)";
+            
+            \Illuminate\Support\Facades\Log::warning("🛑 [WhatsApp AI] Auto-Reply muted for {$phone}. Reason: {$reasonText}.");
+            
+            // Record to HeldMessageLog database table
+            \App\Models\HeldMessageLog::create([
+                'lead_id' => $lead->id,
+                'phone' => $cleanPhone,
+                'customer_name' => $lead->name ?: 'Calon Member',
+                'message' => $messageText,
+                'reason' => $reasonText,
+                'status' => 'held',
+                'muted_until' => $isMutedByCache ? now()->addMinutes(30) : null,
+            ]);
+
             return [
                 'lead' => $lead,
                 'ai_response' => null

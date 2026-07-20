@@ -16,7 +16,8 @@ import {
     SquaresFour,
     CirclesThree,
     Broadcast,
-    Lightning
+    Lightning,
+    ShieldSlash
 } from '@phosphor-icons/react';
 
 export default function AdminLayout({ children, activeTab = 'dashboard', title = 'CRM Console' }) {
@@ -62,6 +63,13 @@ export default function AdminLayout({ children, activeTab = 'dashboard', title =
             label: 'Jadwal Status WA',
             icon: CirclesThree,
             href: route('crm.status'),
+        },
+        {
+            id: 'held-messages',
+            label: 'Log Pesan Ditahan',
+            icon: ShieldSlash,
+            href: route('crm.held-messages'),
+            badge: 'CS Mute'
         },
         {
             id: 'promos',

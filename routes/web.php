@@ -63,6 +63,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/dashboard/status/store', [\App\Http\Controllers\WaStatusController::class, 'store'])->name('crm.status.store');
     Route::delete('/dashboard/status/{id}', [\App\Http\Controllers\WaStatusController::class, 'destroy'])->name('crm.status.destroy');
 
+    Route::get('/dashboard/held-messages', [\App\Http\Controllers\HeldMessageController::class, 'index'])->name('crm.held-messages');
+    Route::post('/dashboard/held-messages/{id}/restore', [\App\Http\Controllers\HeldMessageController::class, 'restore'])->name('crm.held-messages.restore');
+    Route::delete('/dashboard/held-messages/{id}', [\App\Http\Controllers\HeldMessageController::class, 'destroy'])->name('crm.held-messages.destroy');
+
     Route::post('/api/ai/polish', [\App\Http\Controllers\AiAssistantController::class, 'polish'])->name('api.ai.polish');
 
     Route::get('/dashboard/openwa/status', [\App\Http\Controllers\WhatsAppController::class, 'getOpenWaStatus'])->name('crm.openwa.status');
