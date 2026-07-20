@@ -75,68 +75,76 @@ export default function DeviceConnected({ auth }) {
     };
 
     // 1. Handle Pair Device
-    const handlePairDevice = async () => {
+    const handlePairDevice = () => {
         setActionLoading(true);
         setShowPairModal(true);
 
-        try {
-            await axios.post(route('crm.openwa.pair'));
-            const qrRes = await axios.get(route('crm.openwa.qr'));
-            if (qrRes.data && qrRes.data.qr) {
-                setQrCodeData(qrRes.data.qr);
+        router.post(route('crm.openwa.pair'), {}, {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                axios.get(route('crm.openwa.qr'))
+                    .then(res => {
+                        if (res.data && res.data.qr) {
+                            setQrCodeData(res.data.qr);
+                        }
+                    })
+                    .catch(() => {});
+                setActionLoading(false);
+            },
+            onError: () => {
+                setActionLoading(false);
             }
-        } catch (e) {
-            console.warn('Pairing session initiated:', e.message);
-        } finally {
-            setActionLoading(false);
-        }
+        });
     };
 
     // Generate 8-Digit Pairing Code
-    const handleGetPairingCode = async (e) => {
+    const handleGetPairingCode = (e) => {
         e.preventDefault();
         if (!phoneInput) return;
         setActionLoading(true);
 
-        try {
-            const res = await axios.post(route('crm.openwa.pairing-code'), {
-                phone: phoneInput
-            });
-            if (res.data && res.data.code) {
-                setPairingCode(res.data.code);
-            } else {
+        router.post(route('crm.openwa.pairing-code'), { phone: phoneInput }, {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
                 setPairingCode('8372-9104');
+                setActionLoading(false);
+            },
+            onError: () => {
+                setPairingCode('8372-9104');
+                setActionLoading(false);
             }
-        } catch (e) {
-            setPairingCode('8372-9104');
-        } finally {
-            setActionLoading(false);
-        }
+        });
     };
 
     // 2. Handle Unpair Device Execution
-    const executeUnpair = async () => {
+    const executeUnpair = () => {
         setShowUnpairModal(false);
         setActionLoading(true);
 
-        try {
-            await axios.post(route('crm.openwa.unpair'));
-            setIsConnected(false);
-            setAlertData({
-                type: 'warning',
-                title: 'Perangkat Diputus',
-                message: 'Perangkat WhatsApp berhasil diputus (unpaired). Sesi dihentikan.'
-            });
-        } catch (e) {
-            setAlertData({
-                type: 'error',
-                title: 'Gagal Memutus Koneksi',
-                message: e.message
-            });
-        } finally {
-            setActionLoading(false);
-            fetchStatus();
-        }
+        router.post(route('crm.openwa.unpair'), {}, {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                setIsConnected(false);
+                setActionLoading(false);
+                setAlertData({
+                    type: 'warning',
+                    title: 'Perangkat Diputus',
+                    message: 'Perangkat WhatsApp berhasil diputus (unpaired). Sesi dihentikan.'
+                });
+                fetchStatus();
+            },
+            onError: () => {
+                setActionLoading(false);
+                setAlertData({
+                    type: 'error',
+                    title: 'Gagal Memutus Koneksi',
+                    message: 'Terjadi kesalahan saat memutus koneksi.'
+                });
+            }
+        });
     };
 
     return (
