@@ -44,7 +44,7 @@ export default function DeviceConnected({ auth }) {
 
     const deviceStats = {
         phone: isConnected 
-            ? (openWaStatus?.phone || "+62 (Session Gateway Connected)") 
+            ? (openWaStatus?.phone || "Menunggu Pemindaian QR / Terhubung") 
             : "Belum Terhubung",
         pushName: openWaStatus?.pushName || "Loyal Fitness AI Assistant",
         platform: "OpenWA Gateway Server (Baileys Engine)",

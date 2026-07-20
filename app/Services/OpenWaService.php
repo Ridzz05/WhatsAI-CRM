@@ -69,25 +69,43 @@ class OpenWaService
             if (!$healthRes->successful()) {
                 return [
                     'status' => 'OFFLINE',
-                    'connected' => false
+                    'connected' => false,
+                    'phone' => null,
+                    'pushName' => null
                 ];
             }
 
-            // 2. Fetch active sessions list to verify actual WhatsApp connection
+            // 2. Fetch active sessions list to verify actual WhatsApp connection & phone number
             $sessionsRes = $client->get("{$baseUrl}/api/sessions");
             $sessions = $sessionsRes->successful() ? $sessionsRes->json() : [];
+            $sessionData = (!empty($sessions) && is_array($sessions)) ? $sessions[0] : null;
 
-            // If no sessions exist or manually marked as unpaired:
+            $rawPhone = $sessionData['phone'] ?? env('WA_PHONE_NUMBER', null);
+            $pushName = $sessionData['pushName'] ?? 'Loyal Fitness AI Assistant';
+            $sessionStatus = $sessionData['status'] ?? 'created';
+
+            $formattedPhone = null;
+            if (!empty($rawPhone)) {
+                $cleanDigits = preg_replace('/[^0-9]/', '', $rawPhone);
+                $formattedPhone = '+' . $cleanDigits;
+            }
+
             $isUnpairedCache = \Illuminate\Support\Facades\Cache::get('openwa_session_unpaired', false);
             if (empty($sessions) || $isUnpairedCache) {
                 return [
                     'status' => 'UNPAIRED',
-                    'connected' => false
+                    'connected' => false,
+                    'phone' => null,
+                    'pushName' => $pushName,
+                    'sessionStatus' => $sessionStatus
                 ];
             }
 
             $data = $healthRes->json();
             $data['connected'] = true;
+            $data['phone'] = $formattedPhone;
+            $data['pushName'] = $pushName;
+            $data['sessionStatus'] = $sessionStatus;
             return $data;
         } catch (\Exception $e) {
             // Ignore connection errors
@@ -95,7 +113,9 @@ class OpenWaService
 
         return [
             'status' => 'OFFLINE',
-            'connected' => false
+            'connected' => false,
+            'phone' => null,
+            'pushName' => null
         ];
     }
 
