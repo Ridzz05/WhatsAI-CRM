@@ -13,7 +13,8 @@ import {
     FileText,
     WhatsappLogo,
     Question,
-    SquaresFour
+    SquaresFour,
+    CirclesThree
 } from '@phosphor-icons/react';
 
 export default function AdminLayout({ children, activeTab = 'dashboard', title = 'CRM Console' }) {
@@ -41,6 +42,12 @@ export default function AdminLayout({ children, activeTab = 'dashboard', title =
             label: 'Template Pesan',
             icon: FileText,
             href: route('crm.templates'),
+        },
+        {
+            id: 'status',
+            label: 'Jadwal Status WA',
+            icon: CirclesThree,
+            href: route('crm.status'),
         },
         {
             id: 'promos',
