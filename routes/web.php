@@ -51,17 +51,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('Templates');
     })->name('crm.templates');
 
-    Route::get('/dashboard/broadcast', function () {
-        return Inertia::render('Broadcast');
-    })->name('crm.broadcast');
+    Route::get('/dashboard/broadcast', [\App\Http\Controllers\BroadcastController::class, 'index'])->name('crm.broadcast');
+    Route::post('/dashboard/broadcast/store', [\App\Http\Controllers\BroadcastController::class, 'store'])->name('crm.broadcast.store');
+    Route::delete('/dashboard/broadcast/{id}', [\App\Http\Controllers\BroadcastController::class, 'destroy'])->name('crm.broadcast.destroy');
 
-    Route::get('/dashboard/quick-send', function () {
-        return Inertia::render('QuickSend');
-    })->name('crm.quick-send');
+    Route::get('/dashboard/quick-send', [\App\Http\Controllers\QuickSendController::class, 'index'])->name('crm.quick-send');
+    Route::post('/dashboard/quick-send/send', [\App\Http\Controllers\QuickSendController::class, 'send'])->name('crm.quick-send.send');
+    Route::delete('/dashboard/quick-send/{id}', [\App\Http\Controllers\QuickSendController::class, 'destroy'])->name('crm.quick-send.destroy');
 
-    Route::get('/dashboard/status', function () {
-        return Inertia::render('JadwalStatus');
-    })->name('crm.status');
+    Route::get('/dashboard/status', [\App\Http\Controllers\WaStatusController::class, 'index'])->name('crm.status');
+    Route::post('/dashboard/status/store', [\App\Http\Controllers\WaStatusController::class, 'store'])->name('crm.status.store');
+    Route::delete('/dashboard/status/{id}', [\App\Http\Controllers\WaStatusController::class, 'destroy'])->name('crm.status.destroy');
+
+    Route::post('/api/ai/polish', [\App\Http\Controllers\AiAssistantController::class, 'polish'])->name('api.ai.polish');
 
     Route::get('/dashboard/openwa/status', [\App\Http\Controllers\WhatsAppController::class, 'getOpenWaStatus'])->name('crm.openwa.status');
 
