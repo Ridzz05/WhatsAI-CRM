@@ -221,19 +221,32 @@ class OpenWaService
 
             $response = $client->get("{$baseUrl}/api/sessions/{$uuid}/qr");
             if ($response->successful()) {
-                $rawQr = $response->json()['qr'] ?? $response->json()['qrCode'] ?? $response->json()['code'] ?? $response->body();
-                // Build dynamic QR Image URL if raw string
-                $qrImg = (str_starts_with($rawQr, 'data:') || str_starts_with($rawQr, 'http'))
-                    ? $rawQr
-                    : "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=" . urlencode($rawQr);
+                $json = $response->json();
+                $rawQr = null;
+                if (is_array($json)) {
+                    $rawQr = $json['qrCode'] ?? $json['qr'] ?? $json['code'] ?? null;
+                }
 
-                return [
-                    'success' => true,
-                    'authenticated' => false,
-                    'qr' => $qrImg,
-                    'rawQr' => $rawQr,
-                    'data' => $response->json()
-                ];
+                if (empty($rawQr) && is_string($response->body())) {
+                    $body = trim($response->body());
+                    if (str_starts_with($body, 'data:') || str_starts_with($body, 'http')) {
+                        $rawQr = $body;
+                    }
+                }
+
+                if (!empty($rawQr)) {
+                    $qrImg = (str_starts_with($rawQr, 'data:') || str_starts_with($rawQr, 'http'))
+                        ? $rawQr
+                        : "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=" . urlencode($rawQr);
+
+                    return [
+                        'success' => true,
+                        'authenticated' => false,
+                        'qr' => $qrImg,
+                        'rawQr' => $rawQr,
+                        'data' => $json
+                    ];
+                }
             } else {
                 $msg = strtolower($response->json()['message'] ?? '');
                 if (str_contains($msg, 'authenticated') || str_contains($msg, 'ready') || str_contains($msg, 'already started')) {

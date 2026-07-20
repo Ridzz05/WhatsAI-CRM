@@ -417,6 +417,7 @@ export default function DeviceConnected({ auth }) {
                                             src={qrCodeData} 
                                             alt="WhatsApp QR Code"
                                             className="w-48 h-48 object-contain"
+                                            onError={() => setQrCodeData(null)}
                                         />
                                     ) : (
                                         <div className="flex flex-col items-center gap-2 p-6 text-center text-[#1a1714]">
