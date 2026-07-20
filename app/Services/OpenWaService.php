@@ -249,13 +249,16 @@ class OpenWaService
                 }
             } else {
                 $msg = strtolower($response->json()['message'] ?? '');
-                if (str_contains($msg, 'authenticated') || str_contains($msg, 'ready') || str_contains($msg, 'already started')) {
-                    \Illuminate\Support\Facades\Cache::forget('openwa_session_unpaired');
-                    return [
-                        'success' => true,
-                        'authenticated' => true,
-                        'message' => 'Session already authenticated'
-                    ];
+                if (str_contains($msg, 'authenticated') || str_contains($msg, 'ready')) {
+                    $sessionDetails = $client->get("{$baseUrl}/api/sessions/{$uuid}");
+                    if ($sessionDetails->successful() && ($sessionDetails->json()['status'] ?? '') === 'ready' && !empty($sessionDetails->json()['phone'])) {
+                        \Illuminate\Support\Facades\Cache::forget('openwa_session_unpaired');
+                        return [
+                            'success' => true,
+                            'authenticated' => true,
+                            'message' => 'Session already authenticated'
+                        ];
+                    }
                 }
             }
         } catch (\Exception $e) {
@@ -323,10 +326,12 @@ class OpenWaService
     {
         $baseUrl = env('OPENWA_BASE_URL', 'http://localhost:2785');
         $apiKey = env('OPENWA_API_KEY', '');
-        $uuid = $sessionId ?? self::getDefaultSessionUuid();
 
         // Clear unpaired cache state when starting/pairing session
         \Illuminate\Support\Facades\Cache::forget('openwa_session_unpaired');
+
+        // Fetch or create fresh default session
+        $uuid = self::getDefaultSessionUuid();
 
         if (empty($uuid)) {
             return ['success' => false, 'message' => 'No session UUID available'];
@@ -367,8 +372,10 @@ class OpenWaService
                     $client = $client->withHeaders(['X-API-Key' => $apiKey]);
                 }
 
+                // Force kill and delete session completely from OpenWA REST server
                 $client->post("{$baseUrl}/api/sessions/{$uuid}/stop");
                 $client->post("{$baseUrl}/api/sessions/{$uuid}/force-kill");
+                $client->delete("{$baseUrl}/api/sessions/{$uuid}");
             } catch (\Exception $e) {
                 // Ignore connection errors during stop
             }
