@@ -110,7 +110,7 @@ class WhatsAppController extends Controller
      */
     public function getOpenWaPairingCode(Request $request)
     {
-        return response()->json(\App\Services\OpenWaService::getPairingCode($request->phone ?? '6281222827630'));
+        return response()->json(\App\Services\OpenWaService::getPairingCode($request->phone));
     }
 
     /**

@@ -40,15 +40,17 @@ export default function DeviceConnected({ auth }) {
     const [pairingMode, setPairingMode] = useState('qr'); // 'qr' or 'code'
     const [qrCodeData, setQrCodeData] = useState(null);
     const [pairingCode, setPairingCode] = useState(null);
-    const [phoneInput, setPhoneInput] = useState('6281222827630');
+    const [phoneInput, setPhoneInput] = useState('');
 
     const deviceStats = {
-        phone: isConnected ? "+62 812-2282-7630" : "Belum Terhubung",
-        pushName: "Loyal Fitness AI Assistant",
+        phone: isConnected 
+            ? (openWaStatus?.phone || "+62 (Session Gateway Connected)") 
+            : "Belum Terhubung",
+        pushName: openWaStatus?.pushName || "Loyal Fitness AI Assistant",
         platform: "OpenWA Gateway Server (Baileys Engine)",
         port: 2785,
         laravelPort: 8001,
-        battery: 98,
+        battery: openWaStatus?.battery ?? 98,
         lastSeen: isConnected ? "Online (Real-time)" : "Offline",
         swaggerUrl: "http://localhost:2785/api/docs"
     };
