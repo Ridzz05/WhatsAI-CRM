@@ -52,6 +52,47 @@ class OpenWaService
     }
 
     /**
+     * Send media message (image/document) via OpenWA Gateway REST API.
+     */
+    public static function sendMedia($phone, $caption, $mediaPath, $sessionId = null)
+    {
+        $baseUrl = env('OPENWA_BASE_URL', 'http://localhost:2785');
+        $apiKey = env('OPENWA_API_KEY', '');
+        $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+        $uuid = $sessionId ?? self::getDefaultSessionUuid() ?? 'default';
+        $chatId = str_contains($cleanPhone, '@') ? $cleanPhone : "{$cleanPhone}@s.whatsapp.net";
+
+        try {
+            $client = Http::withoutVerifying()->timeout(15);
+            if (!empty($apiKey)) {
+                $client = $client->withHeaders(['X-API-Key' => $apiKey]);
+            }
+
+            if (file_exists($mediaPath)) {
+                $mime = mime_content_type($mediaPath);
+                $isImage = str_starts_with($mime, 'image/');
+                $endpoint = $isImage ? "send-image" : "send-file";
+
+                $response = $client->attach('file', file_get_contents($mediaPath), basename($mediaPath))
+                    ->post("{$baseUrl}/api/sessions/{$uuid}/messages/{$endpoint}", [
+                        'chatId' => $chatId,
+                        'caption' => $caption,
+                    ]);
+
+                if ($response->successful()) {
+                    Log::info("OpenWA media sent to {$cleanPhone}");
+                    return ['success' => true, 'data' => $response->json()];
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error("OpenWA Media Send Error: " . $e->getMessage());
+        }
+
+        // Fallback to text message if media send fails
+        return self::sendMessage($phone, $caption, $sessionId);
+    }
+
+    /**
      * Get OpenWA Session Health / Status
      */
     public static function getStatus()

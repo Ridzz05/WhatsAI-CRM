@@ -23,8 +23,14 @@ class QuickSendController extends Controller
         $request->validate([
             'recipients' => 'required|string',
             'message' => 'required|string',
-            'channel' => 'nullable|string'
+            'channel' => 'nullable|string',
+            'attachment' => 'nullable|file|mimes:jpeg,png,jpg,pdf,doc,docx|max:10240'
         ]);
+
+        $attachmentPath = null;
+        if ($request->hasFile('attachment')) {
+            $attachmentPath = $request->file('attachment')->store('quick_send_attachments', 'public');
+        }
 
         $rawRecipients = explode("\n", str_replace(",", "\n", $request->recipients));
         $sentLogs = [];
@@ -44,14 +50,19 @@ class QuickSendController extends Controller
             $parsedMessage = str_replace('{{waktu}}', date('H:i'), $parsedMessage);
 
             // Deliver via OpenWA Gateway Service
-            $res = OpenWaService::sendMessage($phone, $parsedMessage);
+            if ($attachmentPath && file_exists(storage_path('app/public/' . $attachmentPath))) {
+                $fullPath = storage_path('app/public/' . $attachmentPath);
+                $res = OpenWaService::sendMedia($phone, $parsedMessage, $fullPath);
+            } else {
+                $res = OpenWaService::sendMessage($phone, $parsedMessage);
+            }
 
             $log = QuickSendLog::create([
                 'phone' => $phone,
                 'name' => $name,
                 'message' => $parsedMessage,
                 'channel' => $request->channel ?? 'openwa',
-                'status' => $res['success'] ? 'terkirim' : 'gagal',
+                'status' => ($res['success'] ?? false) ? 'terkirim' : 'gagal',
                 'sent_at' => now()
             ]);
 
