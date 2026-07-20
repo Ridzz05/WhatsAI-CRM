@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
+import axios from 'axios';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { 
     Broadcast, 
@@ -20,7 +21,7 @@ import {
     ArrowClockwise
 } from '@phosphor-icons/react';
 
-export default function BroadcastPesan({ auth }) {
+export default function BroadcastPesan({ auth, broadcasts = [] }) {
     // Form States
     const [campaignTitle, setCampaignTitle] = useState('');
     const [content, setContent] = useState('');
@@ -37,34 +38,68 @@ export default function BroadcastPesan({ auth }) {
     const [pauseMax, setPauseMax] = useState(20);
 
     const [isAiLoading, setIsAiLoading] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Variable insertion helper
     const insertVariable = (varName) => {
-        setContent(prev => prev + ` {${varName}}`);
+        setContent(prev => prev + ` {{${varName}}}`);
     };
 
-    // AI Quick Polish Styles
-    const applyAiStyle = (styleType) => {
+    // AI Quick Polish Styles via Backend Endpoint
+    const applyAiStyle = async (styleType) => {
         if (!content.trim()) return;
         setIsAiLoading(true);
 
-        setTimeout(() => {
+        try {
+            const res = await axios.post(route('api.ai.polish'), {
+                text: content,
+                style: styleType
+            });
+
+            if (res.data && res.data.polished_text) {
+                setContent(res.data.polished_text);
+            }
+        } catch (e) {
+            console.warn('AI Polish fallback active:', e.message);
             if (styleType === 'ramah') {
                 setContent(`Halo kak! 😊 ${content} \n\nKalau ada pertanyaan, feel free untuk balas chat ini ya kak! 🙏`);
             } else if (styleType === 'persuasif') {
                 setContent(`🔥 PROMO SPESIAL TERBATAS! 🔥\n\n${content}\n\nAmankan slot promo kakak sekarang juga sebelum kehabisan! 🚀`);
-            } else if (styleType === 'singkat') {
-                setContent(content.substring(0, 150) + '...');
             }
+        } finally {
             setIsAiLoading(false);
-        }, 800);
+        }
     };
 
     const handleSubmitBroadcast = (e) => {
         e.preventDefault();
         if (!content.trim()) return;
 
-        alert(`Broadcast "${campaignTitle || 'Tanpa Judul'}" berhasil dibuat & akan diproses secara background dengan proteksi Smart Blast Anti-Ban!`);
+        setIsSubmitting(true);
+        router.post(route('crm.broadcast.store'), {
+            title: campaignTitle,
+            content: content,
+            attachment_type: attachmentType,
+            media_url: mediaUrl,
+            send_schedule: sendSchedule || null,
+            recurrence_pattern: recurrencePattern,
+            delay_min: delayMin,
+            delay_max: delayMax,
+            chunk_size: chunkSize,
+            pause_min: pauseMin,
+            pause_max: pauseMax
+        }, {
+            onSuccess: () => {
+                setCampaignTitle('');
+                setContent('');
+                setMediaUrl('');
+                setSendSchedule('');
+                setIsSubmitting(false);
+            },
+            onError: () => {
+                setIsSubmitting(false);
+            }
+        });
     };
 
     return (
@@ -133,14 +168,14 @@ export default function BroadcastPesan({ auth }) {
                         {/* Variables Dropdown / Insertion */}
                         <div className="flex items-center gap-2 flex-wrap pt-1">
                             <span className="text-[11px] font-mono text-[#f5efe4]/50">Sisipkan Variabel Dinamis:</span>
-                            {['nama', 'phone', 'goal', 'promo'].map((v) => (
+                            {['nama', 'nomor', 'tanggal', 'waktu'].map((v) => (
                                 <button
                                     type="button"
                                     key={v}
                                     onClick={() => insertVariable(v)}
                                     className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] font-mono text-[#e98425] transition-all"
                                 >
-                                    +{'{' + v + '}'}
+                                    +{'{' + '{' + v + '}' + '}'}
                                 </button>
                             ))}
                         </div>
@@ -307,7 +342,7 @@ export default function BroadcastPesan({ auth }) {
                             <Sparkle className="w-4 h-4 text-[#e98425]" /> Asisten Penulisan AI ✦ AI Live
                         </h2>
                         <p className="text-xs text-[#f5efe4]/60">
-                            Tulis pesan Anda di editor utama terlebih dahulu, lalu klik tombol gaya di bawah untuk memolesnya secara otomatis menggunakan AI.
+                            Tulis pesan Anda di form editor utama terlebih dahulu, lalu klik tombol gaya di bawah untuk memolesnya secara otomatis menggunakan AI.
                         </p>
 
                         <div className="flex items-center gap-2 pt-1 flex-wrap">
@@ -356,7 +391,7 @@ export default function BroadcastPesan({ auth }) {
                                         onError={(e) => { e.target.style.display = 'none'; }}
                                     />
                                 )}
-                                <p className="whitespace-pre-line font-sans">
+                                <p className="whitespace-pre-line font-sans leading-relaxed">
                                     {content.trim() || 'Tulis draf pesan untuk memunculkan pratinjau di sini...'}
                                 </p>
                                 <span className="text-[9.5px] text-white/60 text-right block mt-1 font-mono">
@@ -425,10 +460,11 @@ export default function BroadcastPesan({ auth }) {
 
                         <button 
                             type="submit"
-                            className="w-full py-3 rounded-xl bg-[#e98425] hover:bg-[#d4741c] text-[#1a1714] text-xs font-extrabold shadow-lg shadow-[#e98425]/15 transition-all flex items-center justify-center gap-2 mt-2"
+                            disabled={isSubmitting}
+                            className="w-full py-3 rounded-xl bg-[#e98425] hover:bg-[#d4741c] text-[#1a1714] text-xs font-extrabold shadow-lg shadow-[#e98425]/15 transition-all flex items-center justify-center gap-2 mt-2 disabled:opacity-50"
                         >
                             <PaperPlaneTilt className="w-4 h-4" weight="bold" />
-                            Mulai Pengiriman Broadcast
+                            {isSubmitting ? 'Memproses Broadcast...' : 'Mulai Pengiriman Broadcast'}
                         </button>
                     </div>
                 </div>

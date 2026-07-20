@@ -79,4 +79,42 @@ class OpenWaService
             'connected' => false
         ];
     }
+
+    /**
+     * Send WhatsApp Story / Status update via OpenWA Gateway
+     */
+    public static function sendStatus($text, $bgColor = '#075e54')
+    {
+        $baseUrl = env('OPENWA_BASE_URL', 'http://localhost:2785');
+        $apiKey = env('OPENWA_API_KEY', '');
+
+        try {
+            $client = Http::withoutVerifying()->timeout(10);
+            if (!empty($apiKey)) {
+                $client = $client->withHeaders(['X-API-Key' => $apiKey]);
+            }
+
+            $response = $client->post("{$baseUrl}/api/sessions/default/status/send-text", [
+                'text' => $text,
+                'backgroundColor' => $bgColor
+            ]);
+
+            if ($response->successful()) {
+                Log::info("OpenWA Status Story posted successfully");
+                return [
+                    'success' => true,
+                    'data' => $response->json()
+                ];
+            }
+
+            Log::error("OpenWA Status Post Error: " . $response->body());
+        } catch (\Exception $e) {
+            Log::error("OpenWA Connection Error: " . $e->getMessage());
+        }
+
+        return [
+            'success' => false,
+            'message' => 'Failed to post status via OpenWA Gateway'
+        ];
+    }
 }

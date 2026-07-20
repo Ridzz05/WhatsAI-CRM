@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\WaStatus;
+use App\Services\OpenWaService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -25,15 +26,26 @@ class WaStatusController extends Controller
             'scheduled_at' => 'nullable|date'
         ]);
 
+        $bgColor = $request->bg_color ?? '#075e54';
+        $statusState = 'terjadwal';
+        $sentAt = null;
+
+        // Instant post execution via OpenWA Service if no schedule is provided
+        if (empty($request->scheduled_at)) {
+            $res = OpenWaService::sendStatus($request->text, $bgColor);
+            $statusState = $res['success'] ? 'terkirim' : 'gagal';
+            $sentAt = now();
+        }
+
         $status = WaStatus::create([
             'text' => $request->text,
-            'bg_color' => $request->bg_color ?? '#075e54',
+            'bg_color' => $bgColor,
             'scheduled_at' => $request->scheduled_at,
-            'status' => $request->scheduled_at ? 'terjadwal' : 'terkirim',
-            'sent_at' => $request->scheduled_at ? null : now()
+            'status' => $statusState,
+            'sent_at' => $sentAt
         ]);
 
-        return redirect()->back()->with('success', 'Jadwal status WhatsApp berhasil dibuat!');
+        return redirect()->back()->with('success', 'Status WhatsApp berhasil diproses!');
     }
 
     public function destroy($id)

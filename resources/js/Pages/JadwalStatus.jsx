@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { 
     PaperPlaneTilt, 
@@ -16,7 +16,7 @@ import {
     Sparkle
 } from '@phosphor-icons/react';
 
-export default function JadwalStatus({ auth }) {
+export default function JadwalStatus({ auth, statuses = [] }) {
     const [activeTab, setActiveTab] = useState('buat'); // 'buat' or 'preview'
     const [historyTab, setHistoryTab] = useState('semua'); // 'terjadwal', 'terkirim', 'gagal', 'semua'
     const [searchQuery, setSearchQuery] = useState('');
@@ -25,7 +25,7 @@ export default function JadwalStatus({ auth }) {
     const [statusText, setStatusText] = useState('');
     const [bgColor, setBgColor] = useState('#075e54'); // Default WA Green
     const [scheduledAt, setScheduledAt] = useState('');
-    const [statusType, setStatusType] = useState('text'); // 'text' or 'media'
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const colorOptions = [
         { name: 'WA Green', hex: '#075e54' },
@@ -36,54 +36,36 @@ export default function JadwalStatus({ auth }) {
         { name: 'Amber Gold', hex: '#b45309' }
     ];
 
-    // Status History list state
-    const [statuses, setStatuses] = useState([
-        {
-            id: 1,
-            text: "🔥 Presales Loyal Fitness Prime PS dibuka! Dapatkan harga promo khusus terbatas sebelum opening 1 Okt 2026.",
-            bgColor: "#075e54",
-            scheduledTime: "21 Jul 2026, 09:00 WIB",
-            status: "terjadwal",
-            createdAt: "Hari ini"
-        },
-        {
-            id: 2,
-            text: "💪 Jadwal Kelas Sore Weekdays: 17:00 WIB. Buruan amankan slot kamu sekarang!",
-            bgColor: "#6b21a8",
-            scheduledTime: "20 Jul 2026, 17:00 WIB",
-            status: "terkirim",
-            createdAt: "Kemarin"
-        }
-    ]);
-
     const handleCreateStatus = (e) => {
         e.preventDefault();
         if (!statusText.trim()) return;
 
-        const newStatus = {
-            id: Date.now(),
+        setIsSubmitting(true);
+        router.post(route('crm.status.store'), {
             text: statusText,
-            bgColor: bgColor,
-            scheduledTime: scheduledAt ? new Date(scheduledAt).toLocaleString('id-ID') : 'Sekarang',
-            status: scheduledAt ? 'terjadwal' : 'terkirim',
-            createdAt: 'Baru saja'
-        };
-
-        setStatuses([newStatus, ...statuses]);
-        setStatusText('');
-        setScheduledAt('');
-        alert('Jadwal status WhatsApp berhasil dibuat!');
+            bg_color: bgColor,
+            scheduled_at: scheduledAt || null
+        }, {
+            onSuccess: () => {
+                setStatusText('');
+                setScheduledAt('');
+                setIsSubmitting(false);
+            },
+            onError: () => {
+                setIsSubmitting(false);
+            }
+        });
     };
 
     const handleDeleteStatus = (id) => {
         if (confirm('Hapus jadwal status ini?')) {
-            setStatuses(statuses.filter(s => s.id !== id));
+            router.delete(route('crm.status.destroy', id));
         }
     };
 
     const filteredStatuses = statuses.filter(s => {
         const matchesTab = historyTab === 'semua' || s.status === historyTab;
-        const matchesSearch = s.text.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesSearch = s.text && s.text.toLowerCase().includes(searchQuery.toLowerCase());
         return matchesTab && matchesSearch;
     });
 
@@ -106,7 +88,7 @@ export default function JadwalStatus({ auth }) {
                 </div>
 
                 <button 
-                    onClick={() => alert('Daftar status diperbarui!')}
+                    onClick={() => router.reload()}
                     className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white text-xs font-bold border border-white/10 transition-all"
                 >
                     <ArrowClockwise className="w-4 h-4" weight="bold" />
@@ -202,10 +184,11 @@ export default function JadwalStatus({ auth }) {
 
                             <button
                                 type="submit"
-                                className="w-full py-3 rounded-xl bg-[#e98425] hover:bg-[#d4741c] text-[#1a1714] text-xs font-extrabold shadow-lg shadow-[#e98425]/15 transition-all mt-2 flex items-center justify-center gap-2"
+                                disabled={isSubmitting}
+                                className="w-full py-3 rounded-xl bg-[#e98425] hover:bg-[#d4741c] text-[#1a1714] text-xs font-extrabold shadow-lg shadow-[#e98425]/15 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                             >
                                 <Sparkle className="w-4 h-4" weight="bold" />
-                                {scheduledAt ? 'Simpan & Jadwalkan Status' : 'Post Status Sekarang'}
+                                {isSubmitting ? 'Memproses...' : scheduledAt ? 'Simpan & Jadwalkan Status' : 'Post Status Sekarang'}
                             </button>
                         </form>
                     ) : (
@@ -238,7 +221,7 @@ export default function JadwalStatus({ auth }) {
 
                                 {/* Main Text Message Container */}
                                 <div className="my-auto px-4 text-center">
-                                    <p className="text-white font-bold text-sm leading-relaxed whitespace-pre-line drop-shadow-md">
+                                    <p className="text-white font-bold text-sm leading-relaxed whitespace-pre-line drop-shadow-md font-sans">
                                         {statusText.trim() || 'Tulis status di tab Buat Status...'}
                                     </p>
                                 </div>
@@ -306,14 +289,14 @@ export default function JadwalStatus({ auth }) {
                                     <div className="flex items-start gap-3 min-w-0">
                                         <div 
                                             className="w-4 h-4 rounded-full shrink-0 mt-1 border border-white/30"
-                                            style={{ backgroundColor: item.bgColor }}
+                                            style={{ backgroundColor: item.bg_color || item.bgColor || '#075e54' }}
                                         />
                                         <div className="flex flex-col min-w-0">
-                                            <p className="text-xs text-white font-medium line-clamp-2">
+                                            <p className="text-xs text-white font-medium leading-relaxed">
                                                 "{item.text}"
                                             </p>
                                             <span className="text-[10.5px] font-mono text-[#f5efe4]/40 mt-1">
-                                                Waktu: {item.scheduledTime}
+                                                Waktu: {item.scheduled_at || item.scheduledTime || 'Sekarang'}
                                             </span>
                                         </div>
                                     </div>
@@ -340,7 +323,7 @@ export default function JadwalStatus({ auth }) {
                             ))}
                         </div>
                     ) : (
-                        <div className="text-center py-12 text-[#f5efe4]/40 text-xs font-sans">
+                        <div className="text-center py-16 text-[#f5efe4]/40 text-xs font-sans">
                             Tidak ada jadwal status yang ditemukan pada kategori ini.
                         </div>
                     )}
