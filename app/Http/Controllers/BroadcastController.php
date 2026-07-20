@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\ProcessBroadcastJob;
 use App\Models\Broadcast;
 use App\Models\BroadcastRecipient;
-use App\Services\OpenWaService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -61,6 +61,11 @@ class BroadcastController extends Controller
                     'status' => 'pending'
                 ]);
             }
+        }
+
+        // Dispatch background Smart Blast job if not scheduled
+        if (!$request->send_schedule) {
+            ProcessBroadcastJob::dispatch($broadcast->id);
         }
 
         return redirect()->back()->with('success', 'Broadcast berhasil dibuat dan sedang diproses secara background dengan Smart Blast Protection!');
