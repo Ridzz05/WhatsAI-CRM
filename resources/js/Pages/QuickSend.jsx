@@ -249,8 +249,8 @@ export default function QuickSend({ auth, logs = [] }) {
 
             {/* Page Header */}
             <div className="pb-4 border-b border-[#ebe6dd]/10 mb-6">
-                <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
-                    <Lightning className="w-7 h-7 text-[#e98425]" />
+                <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
+                    <Lightning className="w-6 h-6 sm:w-7 sm:h-7 text-[#e98425]" />
                     <span>Kirim Cepat (Quick Send)</span>
                 </h1>
                 <p className="text-xs text-[#f5efe4]/60 mt-1">
@@ -259,12 +259,12 @@ export default function QuickSend({ auth, logs = [] }) {
             </div>
 
             {/* Main Grid (Left Form 7 Cols, Right History 5 Cols) */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
                 
                 {/* LEFT COLUMN: Main Form & AI Assistant (7 Cols) */}
-                <div className="lg:col-span-7 flex flex-col gap-6">
+                <div className="lg:col-span-7 flex flex-col gap-4 sm:gap-6">
                     
-                    <form onSubmit={handleSendQuick} className="bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-6 flex flex-col gap-5 shadow-xl">
+                    <form onSubmit={handleSendQuick} className="bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-4 sm:p-6 flex flex-col gap-5 shadow-xl">
                         
                         {/* 1. PILIH AKUN / CHANNEL PENGIRIM */}
                         <div>
@@ -479,7 +479,7 @@ export default function QuickSend({ auth, logs = [] }) {
                     </form>
 
                     {/* 6. ASISTEN PENULISAN AI INTERAKTIF (✦ AI Live Card) */}
-                    <div className="bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-6 flex flex-col gap-4 shadow-xl">
+                    <div className="bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-4 sm:p-6 flex flex-col gap-4 shadow-xl">
                         <div className="flex items-center justify-between">
                             <span className="text-xs font-bold text-white flex items-center gap-2">
                                 <Sparkle className="w-4 h-4 text-[#e98425]" /> ASISTEN PENULISAN AI
@@ -605,7 +605,7 @@ export default function QuickSend({ auth, logs = [] }) {
                 </div>
 
                 {/* RIGHT COLUMN: RIWAYAT PENGIRIMAN (5 Cols) */}
-                <div className="lg:col-span-5 bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-6 min-h-[480px] flex flex-col justify-start shadow-xl">
+                <div className="lg:col-span-5 bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-4 sm:p-6 min-h-[380px] sm:min-h-[480px] flex flex-col justify-start shadow-xl">
                     
                     <div className="flex items-center justify-between mb-4 border-b border-[#ebe6dd]/10 pb-3">
                         <h2 className="text-xs font-extrabold text-[#f5efe4]/80 uppercase tracking-wider">
