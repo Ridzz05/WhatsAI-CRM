@@ -153,6 +153,18 @@ class OpenWaService
             // Ignore connection errors
         }
 
+        // Fallback: Check if Baileys gateway (gateway.js) is connected
+        $gatewayStatus = \Illuminate\Support\Facades\Cache::get('whatsapp_gateway_status');
+        if ($gatewayStatus === 'connected') {
+            return [
+                'status' => 'ONLINE',
+                'connected' => true,
+                'phone' => 'Terhubung via Baileys Engine',
+                'pushName' => 'Loyal Fitness AI Assistant',
+                'sessionStatus' => 'ready'
+            ];
+        }
+
         return [
             'status' => 'OFFLINE',
             'connected' => false,
@@ -308,13 +320,38 @@ class OpenWaService
                 }
             }
         } catch (\Exception $e) {
-            Log::error("OpenWA QR Error: " . $e->getMessage());
+            // Ignore connection error to OpenWA REST server
+        }
+
+        // Fallback: Check if Baileys gateway (gateway.js) broadcasted a QR or status via /api/whatsapp/status
+        $gatewayStatus = \Illuminate\Support\Facades\Cache::get('whatsapp_gateway_status');
+        if ($gatewayStatus === 'connected') {
+            return [
+                'success' => true,
+                'authenticated' => true,
+                'message' => 'WhatsApp Gateway is connected and authenticated'
+            ];
+        }
+
+        $cachedQr = \Illuminate\Support\Facades\Cache::get('whatsapp_gateway_qr');
+        if (!empty($cachedQr)) {
+            $qrImg = (str_starts_with($cachedQr, 'data:') || str_starts_with($cachedQr, 'http'))
+                ? $cachedQr
+                : "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=" . urlencode($cachedQr);
+
+            return [
+                'success' => true,
+                'authenticated' => false,
+                'qr' => $qrImg,
+                'rawQr' => $cachedQr,
+                'source' => 'baileys_gateway'
+            ];
         }
 
         return [
             'success' => false,
             'authenticated' => false,
-            'message' => 'Failed to fetch QR Code from OpenWA'
+            'message' => 'Failed to fetch QR Code from WhatsApp Gateway'
         ];
     }
 
