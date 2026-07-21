@@ -107,11 +107,11 @@ export default function BroadcastPesan({ auth, broadcasts = [] }) {
             <Head title="Buat Broadcast - WhatsAI CRM" />
 
             {/* Page Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-[#ebe6dd]/10">
-                <div>
-                    <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-3">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-2 border-b border-[#ebe6dd]/10">
+                <div className="min-w-0">
+                    <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight flex items-center gap-2 flex-wrap">
                         Buat Broadcast
-                        <span className="text-xs font-mono font-bold bg-[#e98425]/15 text-[#e98425] px-2.5 py-1 rounded-full border border-[#e98425]/30">
+                        <span className="text-xs font-mono font-bold bg-[#e98425]/15 text-[#e98425] px-2.5 py-1 rounded-full border border-[#e98425]/30 whitespace-nowrap">
                             Smart Blast Engine
                         </span>
                     </h1>
@@ -121,13 +121,13 @@ export default function BroadcastPesan({ auth, broadcasts = [] }) {
                 </div>
             </div>
 
-            <form onSubmit={handleSubmitBroadcast} className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <form onSubmit={handleSubmitBroadcast} className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
                 
                 {/* LEFT COLUMN: Editor & Configurations (7 Cols) */}
-                <div className="lg:col-span-7 flex flex-col gap-6">
+                <div className="lg:col-span-7 flex flex-col gap-4 sm:gap-6">
                     
                     {/* SECTION 1: Tulis Pesan Broadcast */}
-                    <div className="bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-6 flex flex-col gap-4">
+                    <div className="bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-4 sm:p-6 flex flex-col gap-4">
                         <h2 className="text-sm font-extrabold text-white flex items-center gap-2">
                             <Broadcast className="w-4 h-4 text-[#e98425]" /> Tulis Pesan Broadcast
                         </h2>
@@ -182,7 +182,7 @@ export default function BroadcastPesan({ auth, broadcasts = [] }) {
                     </div>
 
                     {/* SECTION 2: Lampiran Media / File */}
-                    <div className="bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-6 flex flex-col gap-4">
+                    <div className="bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-4 sm:p-6 flex flex-col gap-4">
                         <h2 className="text-sm font-extrabold text-white flex items-center gap-2">
                             <Image className="w-4 h-4 text-[#e98425]" /> Lampiran Media / File
                         </h2>
@@ -226,7 +226,7 @@ export default function BroadcastPesan({ auth, broadcasts = [] }) {
                     </div>
 
                     {/* SECTION 3: Jadwal Pengiriman */}
-                    <div className="bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-6 flex flex-col gap-4">
+                    <div className="bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-4 sm:p-6 flex flex-col gap-4">
                         <h2 className="text-sm font-extrabold text-white flex items-center gap-2">
                             <Clock className="w-4 h-4 text-[#e98425]" /> Jadwal Pengiriman
                         </h2>
@@ -263,7 +263,7 @@ export default function BroadcastPesan({ auth, broadcasts = [] }) {
                     </div>
 
                     {/* SECTION 4: Proteksi Anti-Ban (Smart Blast) */}
-                    <div className="bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-6 flex flex-col gap-4">
+                    <div className="bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-4 sm:p-6 flex flex-col gap-4">
                         <div className="flex items-center justify-between">
                             <h2 className="text-sm font-extrabold text-white flex items-center gap-2">
                                 <ShieldCheck className="w-4 h-4 text-emerald-400" /> Proteksi Anti-Ban (Smart Blast)
@@ -337,7 +337,7 @@ export default function BroadcastPesan({ auth, broadcasts = [] }) {
                     </div>
 
                     {/* SECTION 5: Asisten Penulisan AI */}
-                    <div className="bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-6 flex flex-col gap-3">
+                    <div className="bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-4 sm:p-6 flex flex-col gap-3">
                         <h2 className="text-sm font-extrabold text-white flex items-center gap-2">
                             <Sparkle className="w-4 h-4 text-[#e98425]" /> Asisten Penulisan AI ✦ AI Live
                         </h2>
@@ -367,10 +367,11 @@ export default function BroadcastPesan({ auth, broadcasts = [] }) {
                 </div>
 
                 {/* RIGHT COLUMN: WhatsApp Preview & Anti-Ban Mode Info (5 Cols) */}
-                <div className="lg:col-span-5 flex flex-col gap-6 sticky top-6">
+                {/* On mobile: renders below form. On lg+: sticky sidebar */}
+                <div className="lg:col-span-5 flex flex-col gap-4 sm:gap-6 lg:sticky lg:top-6">
                     
                     {/* WhatsApp Chat Preview Phone Mockup */}
-                    <div className="bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-6 flex flex-col items-center">
+                    <div className="bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-4 sm:p-6 flex flex-col items-center">
                         <div className="w-full flex items-center justify-between pb-3 border-b border-[#ebe6dd]/10 mb-4">
                             <span className="text-xs font-bold text-white flex items-center gap-2">
                                 <WhatsappLogo className="w-4 h-4 text-emerald-400" weight="fill" /> Pratinjau Pesan WA
@@ -402,7 +403,7 @@ export default function BroadcastPesan({ auth, broadcasts = [] }) {
                     </div>
 
                     {/* Mode Anti-Banned Aktif Card */}
-                    <div className="bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-6 flex flex-col gap-4">
+                    <div className="bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-4 sm:p-6 flex flex-col gap-4">
                         <div className="flex items-center justify-between border-b border-[#ebe6dd]/10 pb-3">
                             <h3 className="text-xs font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
                                 <ShieldCheck className="w-4 h-4 text-emerald-400" /> Mode Anti-Banned Aktif
