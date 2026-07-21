@@ -154,6 +154,21 @@ async function startBot() {
         }
     });
 
+    // Monitor read receipts when CS opens a room chat on paired phone (Centang Biru / Read)
+    sock.ev.on('message-receipt.update', (receipts) => {
+        for (const receipt of receipts) {
+            if (receipt.key?.remoteJid) {
+                let phoneJid = receipt.key.remoteJid;
+                if (phoneJid.endsWith('@s.whatsapp.net') || phoneJid.endsWith('@lid')) {
+                    const phone = phoneJid.replace('@s.whatsapp.net', '').replace('@lid', '');
+                    console.log(`[READ RECEIPT DETECTED] Room chat ${phone} dibaca dari HP. Mematikan AI...`);
+                    const LARAVEL_MANUAL_ACTIVITY_URL = `${LARAVEL_BASE_URL}/api/whatsapp/manual-activity`;
+                    axios.post(LARAVEL_MANUAL_ACTIVITY_URL, { phone }).catch(() => {});
+                }
+            }
+        }
+    });
+
     // Monitor user presence updates (e.g. self presence, composing on paired phone)
     sock.ev.on('presence.update', async (update) => {
         if (!sock?.user?.id || !update.presences) return;
