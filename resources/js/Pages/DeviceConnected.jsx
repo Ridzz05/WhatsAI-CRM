@@ -25,7 +25,7 @@ import {
 } from '@phosphor-icons/react';
 
 export default function DeviceConnected({ auth }) {
-    const [isConnected, setIsConnected] = useState(true);
+    const [isConnected, setIsConnected] = useState(false);
     const [loading, setLoading] = useState(false);
     const [actionLoading, setActionLoading] = useState(false);
     const [copied, setCopied] = useState(false);
@@ -39,7 +39,9 @@ export default function DeviceConnected({ auth }) {
     const [showPairModal, setShowPairModal] = useState(false);
     const [pairingMode, setPairingMode] = useState('qr'); // 'qr' or 'code'
     const [qrCodeData, setQrCodeData] = useState(null);
+    const [qrError, setQrError] = useState(null);
     const [pairingCode, setPairingCode] = useState(null);
+    const [pairingCodeLoading, setPairingCodeLoading] = useState(false);
     const [phoneInput, setPhoneInput] = useState('');
 
     const deviceStats = {
@@ -79,100 +81,113 @@ export default function DeviceConnected({ auth }) {
     // Poll QR Code every 3s when pairing modal is open & auto-close when authenticated
     useEffect(() => {
         let timer;
-        if (showPairModal && pairingMode === 'qr') {
-            const fetchQr = () => {
-                axios.get(route('crm.openwa.qr'))
-                    .then(res => {
-                        if (res.data?.authenticated === true) {
-                            setShowPairModal(false);
-                            setIsConnected(true);
-                            setAlertData({
-                                type: 'success',
-                                title: 'WhatsApp Terhubung!',
-                                message: 'Perangkat WhatsApp berhasil diautentikasi dan ditautkan.'
-                            });
-                            fetchStatus();
-                        } else if (res.data && res.data.qr) {
-                            setQrCodeData(res.data.qr);
-                        }
-                    })
-                    .catch(() => {});
-            };
-
-            fetchQr();
-            timer = setInterval(fetchQr, 3000);
+        if (!showPairModal || pairingMode !== 'qr') {
+            return;
         }
 
+        const fetchQr = () => {
+            axios.get(route('crm.openwa.qr'))
+                .then(res => {
+                    setQrError(null);
+                    if (res.data?.authenticated === true) {
+                        // Only close if we detect REAL authentication (has phone info)
+                        clearInterval(timer);
+                        setShowPairModal(false);
+                        setQrCodeData(null);
+                        setIsConnected(true);
+                        setAlertData({
+                            type: 'success',
+                            title: 'WhatsApp Terhubung!',
+                            message: 'Perangkat WhatsApp berhasil diautentikasi dan ditautkan.'
+                        });
+                        fetchStatus();
+                    } else if (res.data?.qr) {
+                        setQrCodeData(res.data.qr);
+                    } else {
+                        // QR not ready yet — keep spinner
+                        setQrCodeData(null);
+                    }
+                })
+                .catch(() => {
+                    setQrError('Gagal memuat QR. Pastikan OpenWA Gateway aktif.');
+                });
+        };
+
+        // Delay first fetch slightly to allow session start to propagate
+        const initTimer = setTimeout(() => {
+            fetchQr();
+            timer = setInterval(fetchQr, 3000);
+        }, 800);
+
         return () => {
+            clearTimeout(initTimer);
             if (timer) clearInterval(timer);
         };
     }, [showPairModal, pairingMode]);
 
-    // 1. Handle Pair Device
+    // 1. Handle Pair Device — use axios to avoid page reload / modal close
     const handlePairDevice = () => {
+        // Reset all stale state before opening modal
         setQrCodeData(null);
+        setQrError(null);
+        setPairingCode(null);
+        setPhoneInput('');
+        setPairingMode('qr');
         setActionLoading(true);
-        setShowPairModal(true);
 
-        router.post(route('crm.openwa.pair'), {}, {
-            preserveScroll: true,
-            preserveState: true,
-            onSuccess: () => {
+        // Call pair endpoint via axios (NOT router.post) to avoid Inertia navigation
+        axios.post(route('crm.openwa.pair'))
+            .then(() => {
                 setActionLoading(false);
-            },
-            onError: () => {
+                setShowPairModal(true); // Open modal AFTER session start succeeds
+            })
+            .catch(() => {
                 setActionLoading(false);
-            }
-        });
+                setShowPairModal(true); // Still open modal — QR will retry
+            });
     };
 
-    // Generate 8-Digit Pairing Code
+    // Generate 8-Digit Pairing Code — use axios to get real code from OpenWA
     const handleGetPairingCode = (e) => {
         e.preventDefault();
-        if (!phoneInput) return;
-        setActionLoading(true);
+        if (!phoneInput.trim()) return;
+        setPairingCodeLoading(true);
+        setPairingCode(null);
 
-        router.post(route('crm.openwa.pairing-code'), { phone: phoneInput }, {
-            preserveScroll: true,
-            preserveState: true,
-            onSuccess: () => {
-                setPairingCode('8372-9104');
-                setActionLoading(false);
-            },
-            onError: () => {
-                setPairingCode('8372-9104');
-                setActionLoading(false);
-            }
-        });
+        axios.post(route('crm.openwa.pairing-code'), { phone: phoneInput })
+            .then(res => {
+                const code = res.data?.code || res.data?.pairingCode || null;
+                setPairingCode(code || 'Gagal ambil kode');
+            })
+            .catch(() => {
+                setPairingCode('Gagal terhubung ke OpenWA');
+            })
+            .finally(() => setPairingCodeLoading(false));
     };
 
-    // 2. Handle Unpair Device Execution
+    // 2. Handle Unpair Device Execution — use axios to avoid page reload
     const executeUnpair = () => {
         setShowUnpairModal(false);
         setActionLoading(true);
 
-        router.post(route('crm.openwa.unpair'), {}, {
-            preserveScroll: true,
-            preserveState: true,
-            onSuccess: () => {
+        axios.post(route('crm.openwa.unpair'))
+            .then(() => {
                 setIsConnected(false);
-                setActionLoading(false);
+                setOpenWaStatus(null); // Clear stale status to prevent false auth detection
                 setAlertData({
                     type: 'warning',
                     title: 'Perangkat Diputus',
                     message: 'Perangkat WhatsApp berhasil diputus (unpaired). Sesi dihentikan.'
                 });
-                fetchStatus();
-            },
-            onError: () => {
-                setActionLoading(false);
+            })
+            .catch(() => {
                 setAlertData({
                     type: 'error',
                     title: 'Gagal Memutus Koneksi',
-                    message: 'Terjadi kesalahan saat memutus koneksi.'
+                    message: 'Terjadi kesalahan saat memutus koneksi. Coba lagi.'
                 });
-            }
-        });
+            })
+            .finally(() => setActionLoading(false));
     };
 
     return (
@@ -410,56 +425,84 @@ export default function DeviceConnected({ auth }) {
 
                         {/* QR Code Tab View */}
                         {pairingMode === 'qr' ? (
-                            <div className="flex flex-col items-center justify-center p-4 bg-white/5 border border-white/10 rounded-2xl">
-                                <div className="p-4 bg-white rounded-xl shadow-xl mb-3 min-w-[200px] min-h-[200px] flex items-center justify-center">
-                                    {qrCodeData ? (
+                            <div className="flex flex-col items-center justify-center p-4 bg-white/5 border border-white/10 rounded-2xl gap-3">
+                                <div className="p-3 bg-white rounded-xl shadow-xl min-w-[200px] min-h-[200px] flex items-center justify-center">
+                                    {qrError ? (
+                                        <div className="flex flex-col items-center gap-2 p-4 text-center">
+                                            <span className="text-red-500 text-xs font-mono">{qrError}</span>
+                                        </div>
+                                    ) : qrCodeData ? (
                                         <img 
                                             src={qrCodeData} 
                                             alt="WhatsApp QR Code"
-                                            className="w-48 h-48 object-contain"
+                                            className="w-44 h-44 object-contain"
                                             onError={() => setQrCodeData(null)}
                                         />
                                     ) : (
-                                        <div className="flex flex-col items-center gap-2 p-6 text-center text-[#1a1714]">
+                                        <div className="flex flex-col items-center gap-2 p-6 text-center">
                                             <ArrowClockwise className="w-8 h-8 text-[#e98425] animate-spin" />
-                                            <span className="text-xs font-mono font-bold text-[#1a1714]">Memuat QR Code Baileys...</span>
+                                            <span className="text-[11px] font-mono font-bold text-[#1a1714]">Memuat QR Code...</span>
                                         </div>
                                     )}
                                 </div>
-                                <span className="text-[11px] font-mono text-[#f5efe4]/60 text-center">
-                                    Buka WhatsApp di HP ➔ Perangkat Tertaut ➔ Tautkan Perangkat ➔ Pindai QR Code di atas.
-                                </span>
+                                <div className="flex flex-col gap-1 text-center">
+                                    <span className="text-[11px] font-mono text-[#f5efe4]/70 font-bold">Cara Scan:</span>
+                                    <span className="text-[11px] font-mono text-[#f5efe4]/50 leading-relaxed">
+                                        WhatsApp HP → ⋮ Menu → Perangkat Tertaut → Tautkan Perangkat → Pindai QR di atas
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-1.5 text-[10px] font-mono text-amber-400">
+                                    <ArrowClockwise className="w-3 h-3 animate-spin" />
+                                    Menunggu pemindaian QR... (auto-refresh setiap 3 detik)
+                                </div>
                             </div>
                         ) : (
                             /* Phone Pairing Code Tab View */
                             <form onSubmit={handleGetPairingCode} className="flex flex-col gap-4 bg-white/5 border border-white/10 rounded-2xl p-4">
                                 <div>
                                     <label className="block text-xs font-mono font-bold text-[#f5efe4]/70 mb-1">
-                                        Nomor WhatsApp HP Anda
+                                        Nomor WhatsApp HP Anda (format: 628xxx)
                                     </label>
                                     <input 
-                                        type="text"
+                                        type="tel"
                                         placeholder="628123456789"
                                         value={phoneInput}
-                                        onChange={(e) => setPhoneInput(e.target.value)}
+                                        onChange={(e) => setPhoneInput(e.target.value.replace(/[^0-9]/g, ''))}
                                         className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white font-mono focus:outline-none focus:border-[#e98425]"
                                     />
                                 </div>
 
                                 <button
                                     type="submit"
-                                    disabled={actionLoading}
-                                    className="w-full py-2.5 rounded-xl bg-[#e98425] text-[#1a1714] text-xs font-extrabold shadow-md flex items-center justify-center gap-2"
+                                    disabled={pairingCodeLoading || !phoneInput.trim()}
+                                    className="w-full py-2.5 rounded-xl bg-[#e98425] text-[#1a1714] text-xs font-extrabold shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
                                 >
-                                    <PhoneCall className="w-4 h-4" /> Generate Kode Pairing 8-Digit
+                                    {pairingCodeLoading 
+                                        ? <ArrowClockwise className="w-4 h-4 animate-spin" />
+                                        : <PhoneCall className="w-4 h-4" />
+                                    }
+                                    {pairingCodeLoading ? 'Memuat Kode...' : 'Generate Kode Pairing 8-Digit'}
                                 </button>
 
                                 {pairingCode && (
-                                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-center">
-                                        <span className="text-[10px] font-mono text-emerald-400 block mb-1">Kode Pairing WhatsApp Anda:</span>
-                                        <span className="text-xl font-mono font-extrabold text-emerald-400 tracking-widest">
+                                    <div className={`p-3 border rounded-xl text-center ${
+                                        pairingCode.startsWith('Gagal') 
+                                            ? 'bg-red-500/10 border-red-500/30' 
+                                            : 'bg-emerald-500/10 border-emerald-500/30'
+                                    }`}>
+                                        <span className="text-[10px] font-mono block mb-1 text-[#f5efe4]/60">
+                                            {pairingCode.startsWith('Gagal') ? '⚠️ Error:' : 'Kode Pairing WhatsApp Anda:'}
+                                        </span>
+                                        <span className={`text-xl font-mono font-extrabold tracking-widest ${
+                                            pairingCode.startsWith('Gagal') ? 'text-red-400' : 'text-emerald-400'
+                                        }`}>
                                             {pairingCode}
                                         </span>
+                                        {!pairingCode.startsWith('Gagal') && (
+                                            <p className="text-[10px] font-mono text-[#f5efe4]/50 mt-1">
+                                                Masukkan kode ini di WhatsApp HP Anda → Perangkat Tertaut → Tautkan dengan nomor telepon
+                                            </p>
+                                        )}
                                     </div>
                                 )}
                             </form>
