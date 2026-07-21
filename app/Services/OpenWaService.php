@@ -253,6 +253,22 @@ class OpenWaService
     }
 
     /**
+     * Format raw QR text string into a clean 300x300 PNG image URL for HTML <img> tag.
+     */
+    private static function formatQrImageUrl($rawQr)
+    {
+        if (empty($rawQr)) return null;
+
+        // If it is already a base64 image Data URI or direct qrserver image URL, use as-is
+        if (str_starts_with($rawQr, 'data:image/') || str_contains($rawQr, 'api.qrserver.com')) {
+            return $rawQr;
+        }
+
+        // Convert raw string (e.g. 2@AbCd... or https://wa.me/settings/linked_devices#2@...) into PNG QR image
+        return "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" . urlencode($rawQr);
+    }
+
+    /**
      * Get QR Code for WhatsApp Session Pairing
      */
     public static function getQrCode($sessionId = null)
@@ -269,9 +285,7 @@ class OpenWaService
 
         $cachedQr = \Illuminate\Support\Facades\Cache::get('whatsapp_gateway_qr');
         if (!empty($cachedQr)) {
-            $qrImg = (str_starts_with($cachedQr, 'data:') || str_starts_with($cachedQr, 'http'))
-                ? $cachedQr
-                : "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=" . urlencode($cachedQr);
+            $qrImg = self::formatQrImageUrl($cachedQr);
 
             return [
                 'success' => true,
@@ -296,9 +310,7 @@ class OpenWaService
                 }
                 if (!empty($bData['qr'])) {
                     $rawQr = $bData['qr'];
-                    $qrImg = (str_starts_with($rawQr, 'data:') || str_starts_with($rawQr, 'http'))
-                        ? $rawQr
-                        : "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=" . urlencode($rawQr);
+                    $qrImg = self::formatQrImageUrl($rawQr);
 
                     return [
                         'success' => true,
@@ -344,9 +356,7 @@ class OpenWaService
                     }
 
                     if (!empty($rawQr)) {
-                        $qrImg = (str_starts_with($rawQr, 'data:') || str_starts_with($rawQr, 'http'))
-                            ? $rawQr
-                            : "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=" . urlencode($rawQr);
+                        $qrImg = self::formatQrImageUrl($rawQr);
 
                         return [
                             'success' => true,

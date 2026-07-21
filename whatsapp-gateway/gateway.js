@@ -62,10 +62,8 @@ async function startBot() {
         
         if (qr) {
             latestQr = qr;
-            console.log('\n======================================================');
-            console.log('   SILAKAN SCAN QR CODE BERIKUT DENGAN WHATSAPP ANDA');
-            console.log('======================================================\n');
-            qrcode.generate(qr, { small: true });
+            console.log('\n📲 [WHATSAPP GATEWAY] Kode QR WhatsApp baru telah berhasil dibuat!');
+            console.log('👉 Silakan buka Dashboard CRM di browser untuk memindai QR Code di layar.\n');
             await sendStatusReport('disconnected', qr);
 
             // Periodically refresh QR to Laravel every 10s so 90s cache never expires while waiting for scan
