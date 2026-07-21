@@ -265,22 +265,7 @@ class WhatsAppController extends Controller
         $result = $this->processIncomingMessage($phone, $messageText, null);
         $aiResponse = $result['ai_response'] ?? null;
 
-        if (!empty($aiResponse)) {
-            // Reply via OpenWA Gateway Service if active
-            \App\Services\OpenWaService::sendMessage($phone, $aiResponse);
-
-            // Optional Fonnte fallback
-            $token = env('FONNTE_TOKEN');
-            if (!empty($token)) {
-                \Illuminate\Support\Facades\Http::withHeaders([
-                    'Authorization' => $token,
-                ])->post('https://api.fonnte.com/send', [
-                    'target' => $phone,
-                    'message' => $aiResponse,
-                ]);
-            }
-        }
-
+        // Return AI response in JSON payload for gateway.js to send after typing delay simulation
         $responseData = [
             'status' => 'success',
             'ai_response' => $aiResponse
