@@ -113,10 +113,10 @@ export default function LiveLogs() {
                 {/* Header & Breadcrumb */}
                 <div>
                     <Breadcrumb items={[{ label: 'Live System Logs' }]} />
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div>
-                            <h1 className="text-2xl font-extrabold text-white flex items-center gap-3">
-                                <TerminalWindow className="w-7 h-7 text-[#e98425]" />
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                        <div className="min-w-0">
+                            <h1 className="text-xl sm:text-2xl font-extrabold text-white flex items-center gap-2">
+                                <TerminalWindow className="w-6 h-6 sm:w-7 sm:h-7 text-[#e98425]" />
                                 <span>Live Terminal Logs Console</span>
                             </h1>
                             <p className="text-xs text-[#f5efe4]/60 mt-1">
@@ -125,17 +125,17 @@ export default function LiveLogs() {
                         </div>
 
                         {/* Top Action Bar */}
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                             <button
                                 onClick={() => setIsStreaming(!isStreaming)}
-                                className={`px-4 py-2 rounded-xl text-xs font-mono font-bold flex items-center gap-2 border transition-all cursor-pointer ${
+                                className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-mono font-bold flex items-center gap-2 border transition-all cursor-pointer ${
                                     isStreaming 
                                         ? 'bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20' 
                                         : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20'
                                 }`}
                             >
                                 {isStreaming ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                                <span>{isStreaming ? 'Jeda Stream (Pause)' : 'Mulai Stream (Live)'}</span>
+                                <span>{isStreaming ? 'Pause' : 'Live'}</span>
                             </button>
 
                             <button
@@ -151,7 +151,7 @@ export default function LiveLogs() {
                                 className="px-3 py-2 bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-red-400 rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer"
                             >
                                 <Trash className="w-4 h-4" />
-                                <span>Clear Terminal</span>
+                                <span>Clear</span>
                             </button>
                         </div>
                     </div>
@@ -208,24 +208,24 @@ export default function LiveLogs() {
                 </div>
 
                 {/* Cyberpunk Terminal Console Screen */}
-                <div className="bg-[#0a0a0c] border border-[#ebe6dd]/15 rounded-2xl p-5 shadow-2xl relative font-mono text-xs overflow-hidden">
+                <div className="bg-[#0a0a0c] border border-[#ebe6dd]/15 rounded-2xl p-3 sm:p-5 shadow-2xl relative font-mono text-xs overflow-hidden">
                     
                     {/* Terminal Header Bar */}
-                    <div className="flex items-center justify-between border-b border-[#ebe6dd]/10 pb-3 mb-4 text-[#f5efe4]/40 text-[11px]">
-                        <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full bg-red-500/80" />
-                            <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-                            <div className="w-3 h-3 rounded-full bg-green-500/80" />
-                            <span className="ml-2 font-bold text-white/70">whatsai-crm@terminal:~/storage/logs/laravel.log</span>
+                    <div className="flex items-center justify-between border-b border-[#ebe6dd]/10 pb-3 mb-4 text-[#f5efe4]/40 text-[11px] flex-wrap gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                            <div className="w-3 h-3 rounded-full bg-red-500/80 shrink-0" />
+                            <div className="w-3 h-3 rounded-full bg-yellow-500/80 shrink-0" />
+                            <div className="w-3 h-3 rounded-full bg-green-500/80 shrink-0" />
+                            <span className="ml-1 font-bold text-white/70 truncate max-w-[180px] sm:max-w-none">whatsai-crm@terminal:~/storage/logs/laravel.log</span>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 shrink-0">
                             <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                            <span className="text-emerald-400 font-bold">{isStreaming ? 'STREAMING LIVE (2s)' : 'STREAM PAUSED'}</span>
+                            <span className="text-emerald-400 font-bold">{isStreaming ? 'STREAMING LIVE (2s)' : 'PAUSED'}</span>
                         </div>
                     </div>
 
                     {/* Console Lines Stream View */}
-                    <div className="space-y-2 max-h-[520px] overflow-y-auto pr-2 custom-scrollbar">
+                    <div className="space-y-2 max-h-[clamp(350px,50vh,520px)] overflow-y-auto pr-2 custom-scrollbar">
                         {filteredLogs.length > 0 ? (
                             filteredLogs.map((log, index) => {
                                 const badge = getCategoryBadge(log.category);
