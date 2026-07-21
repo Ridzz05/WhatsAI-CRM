@@ -12,12 +12,30 @@ class OpenWaService
      */
     public static function sendMessage($phone, $message, $sessionId = null)
     {
+        $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+
+        // 1. Try local Baileys Gateway Server (Port 3000) if active
+        try {
+            $baileysRes = Http::withoutVerifying()->timeout(8)->post('http://localhost:3000/api/send', [
+                'phone' => $cleanPhone,
+                'message' => $message,
+            ]);
+
+            if ($baileysRes->successful()) {
+                Log::info("Baileys message sent to {$cleanPhone}");
+                return [
+                    'success' => true,
+                    'data' => $baileysRes->json()
+                ];
+            }
+        } catch (\Exception $e) {
+            // Ignore if port 3000 is offline
+        }
+
+        // 2. Try OpenWA REST Server (Port 2785)
         $baseUrl = env('OPENWA_BASE_URL', 'http://localhost:2785');
         $apiKey = env('OPENWA_API_KEY', '');
-        $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
         $uuid = $sessionId ?? self::getDefaultSessionUuid() ?? 'default';
-        
-        // Ensure standard phone number formatting for WhatsApp JID
         $chatId = str_contains($cleanPhone, '@') ? $cleanPhone : "{$cleanPhone}@s.whatsapp.net";
 
         try {
@@ -42,12 +60,14 @@ class OpenWaService
 
             Log::error("OpenWA Send Error: " . $response->body());
         } catch (\Exception $e) {
-            Log::error("OpenWA Connection Error: " . $e->getMessage());
+            if (!str_contains($e->getMessage(), 'Failed to connect')) {
+                Log::error("OpenWA Connection Error: " . $e->getMessage());
+            }
         }
 
         return [
             'success' => false,
-            'message' => 'Failed to deliver message via OpenWA Gateway'
+            'message' => 'Failed to deliver message via WhatsApp Gateway'
         ];
     }
 
