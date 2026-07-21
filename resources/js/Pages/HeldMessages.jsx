@@ -71,15 +71,15 @@ export default function HeldMessages({ logs, filters = {}, stats = {} }) {
         <AdminLayout activeTab="held-messages" title="Log Pesan Ditahan - WhatsAI CRM">
             <Head title="Log Pesan Ditahan (CS Mute)" />
 
-            <div className="max-w-7xl mx-auto space-y-6">
+            <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
                 
                 {/* Header & Breadcrumb */}
                 <div>
                     <Breadcrumb items={[{ label: 'Log Pesan Ditahan' }]} />
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div>
-                            <h1 className="text-2xl font-extrabold text-white flex items-center gap-3">
-                                <ShieldSlash className="w-7 h-7 text-[#e98425]" />
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                        <div className="min-w-0">
+                            <h1 className="text-xl sm:text-2xl font-extrabold text-white flex items-center gap-2">
+                                <ShieldSlash className="w-6 h-6 sm:w-7 sm:h-7 text-[#e98425]" />
                                 <span>Log Pesan Ditahan (CS Mute)</span>
                             </h1>
                             <p className="text-xs text-[#f5efe4]/60 mt-1">
@@ -99,34 +99,34 @@ export default function HeldMessages({ logs, filters = {}, stats = {} }) {
                 )}
 
                 {/* Stat Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-5 flex items-center justify-between shadow-lg">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                    <div className="bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-4 sm:p-5 flex items-center justify-between shadow-lg">
                         <div>
-                            <p className="text-xs font-mono uppercase tracking-wider text-[#f5efe4]/50">Total Pesan Ditahan</p>
-                            <h3 className="text-2xl font-extrabold text-white mt-1">{stats.total_held || 0} Pesan</h3>
+                            <p className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-[#f5efe4]/50">Total Pesan Ditahan</p>
+                            <h3 className="text-xl sm:text-2xl font-extrabold text-white mt-1">{stats.total_held || 0} Pesan</h3>
                         </div>
-                        <div className="w-12 h-12 rounded-xl bg-[#e98425]/10 border border-[#e98425]/20 flex items-center justify-center text-[#e98425]">
-                            <ShieldSlash className="w-6 h-6" />
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[#e98425]/10 border border-[#e98425]/20 flex items-center justify-center text-[#e98425]">
+                            <ShieldSlash className="w-5 h-5 sm:w-6 sm:h-6" />
                         </div>
                     </div>
 
-                    <div className="bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-5 flex items-center justify-between shadow-lg">
+                    <div className="bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-4 sm:p-5 flex items-center justify-between shadow-lg">
                         <div>
-                            <p className="text-xs font-mono uppercase tracking-wider text-[#f5efe4]/50">Mute 30-Menit Aktif</p>
-                            <h3 className="text-2xl font-extrabold text-amber-400 mt-1">{stats.active_cache_mutes || 0} Nomor</h3>
+                            <p className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-[#f5efe4]/50">Mute 30-Menit Aktif</p>
+                            <h3 className="text-xl sm:text-2xl font-extrabold text-amber-400 mt-1">{stats.active_cache_mutes || 0} Nomor</h3>
                         </div>
-                        <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
-                            <Clock className="w-6 h-6" />
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                            <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
                         </div>
                     </div>
 
-                    <div className="bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-5 flex items-center justify-between shadow-lg">
+                    <div className="bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-4 sm:p-5 flex items-center justify-between shadow-lg">
                         <div>
-                            <p className="text-xs font-mono uppercase tracking-wider text-[#f5efe4]/50">Dipulihkan ke AI</p>
-                            <h3 className="text-2xl font-extrabold text-emerald-400 mt-1">{stats.total_restored || 0} Sesi</h3>
+                            <p className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-[#f5efe4]/50">Dipulihkan ke AI</p>
+                            <h3 className="text-xl sm:text-2xl font-extrabold text-emerald-400 mt-1">{stats.total_restored || 0} Sesi</h3>
                         </div>
-                        <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-                            <CheckCircle className="w-6 h-6" />
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                            <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6" />
                         </div>
                     </div>
                 </div>
@@ -162,9 +162,73 @@ export default function HeldMessages({ logs, filters = {}, stats = {} }) {
                     </form>
                 </div>
 
-                {/* Held Messages Table */}
+                {/* Held Messages Table & Mobile Cards */}
                 <div className="bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl overflow-hidden shadow-xl">
-                    <div className="overflow-x-auto">
+                    
+                    {/* Mobile Card List View (Visible < md) */}
+                    <div className="md:hidden divide-y divide-[#ebe6dd]/10">
+                        {logs.data && logs.data.length > 0 ? (
+                            logs.data.map((log) => (
+                                <div key={log.id} className="p-4 space-y-2.5">
+                                    <div className="flex items-center justify-between">
+                                        <div className="font-bold text-white flex items-center gap-2 text-xs">
+                                            <WhatsappLogo className="w-4 h-4 text-emerald-400 shrink-0" />
+                                            <span>{log.customer_name || 'Calon Member'}</span>
+                                        </div>
+                                        <span className="font-mono text-[10px] text-[#f5efe4]/40">
+                                            +{log.phone}
+                                        </span>
+                                    </div>
+
+                                    <div className="p-2.5 rounded-lg bg-[#1a1714] border border-[#ebe6dd]/10 text-xs text-white/90 leading-relaxed font-mono">
+                                        "{log.message}"
+                                    </div>
+
+                                    <div className="flex items-center justify-between text-[10px] font-mono pt-1">
+                                        <span className="text-[#f5efe4]/50">
+                                            {log.reason}
+                                        </span>
+                                        {log.status === 'restored' ? (
+                                            <span className="text-emerald-400 font-bold">Dipulihkan</span>
+                                        ) : log.is_cache_muted ? (
+                                            <span className="text-red-400 font-bold animate-pulse">CS Mute (30m)</span>
+                                        ) : (
+                                            <span className="text-[#f5efe4]/50">Ditahan</span>
+                                        )}
+                                    </div>
+
+                                    <div className="flex items-center justify-between pt-1 border-t border-white/5">
+                                        <span className="text-[10px] font-mono text-[#f5efe4]/40">
+                                            {new Date(log.created_at).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            {log.status !== 'restored' && (
+                                                <button 
+                                                    onClick={() => triggerRestoreModal(log)}
+                                                    className="px-2.5 py-1 bg-[#e98425]/15 hover:bg-[#e98425] text-[#e98425] hover:text-black border border-[#e98425]/30 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer"
+                                                >
+                                                    <ArrowClockwise className="w-3 h-3" /> Restore AI
+                                                </button>
+                                            )}
+                                            <button 
+                                                onClick={() => triggerDeleteModal(log.id)}
+                                                className="p-1 text-red-400/60 hover:text-red-400 rounded-lg transition-colors cursor-pointer"
+                                            >
+                                                <Trash className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="py-12 text-center text-xs text-[#f5efe4]/40 font-mono">
+                                Tidak ada log pesan ditahan yang ditemukan.
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Desktop Table View (Visible >= md) */}
+                    <div className="hidden md:block overflow-x-auto">
                         <table className="w-full text-left text-xs text-[#f5efe4]">
                             <thead className="bg-[#1a1714] border-b border-[#ebe6dd]/10 text-[#f5efe4]/50 font-mono uppercase text-[10px] tracking-wider">
                                 <tr>
