@@ -331,6 +331,15 @@ const server = http.createServer((req, res) => {
         }));
     }
 
+    if (req.url === '/pair' || req.url === '/api/pair') {
+        console.log('\n📲 [PAIR REQUEST] Permintaan pair baru diterima. Memulai ulang socket...');
+        latestQr = null;
+        isConnected = false;
+        startBot();
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ success: true, message: 'Re-initializing WhatsApp socket...' }));
+    }
+
     // Expose API send message endpoint
     if (req.method === 'POST' && req.url === '/api/send') {
         let body = '';

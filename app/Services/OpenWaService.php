@@ -444,17 +444,22 @@ class OpenWaService
      */
     public static function startSession($sessionId = null)
     {
-        $baseUrl = env('OPENWA_BASE_URL', 'http://localhost:2785');
-        $apiKey = env('OPENWA_API_KEY', '');
-
         // Clear unpaired cache state when starting/pairing session
         \Illuminate\Support\Facades\Cache::forget('openwa_session_unpaired');
+        \Illuminate\Support\Facades\Cache::put('whatsapp_gateway_status', 'disconnected');
 
-        // Fetch or create fresh default session
+        // Trigger local Baileys gateway (port 3000) to re-initialize fresh pairing socket
+        try {
+            Http::withoutVerifying()->timeout(3)->get('http://localhost:3000/pair');
+        } catch (\Exception $e) {
+            // Ignore if port 3000 is not running
+        }
+
+        // Fetch or create fresh default session for OpenWA REST
         $uuid = self::getDefaultSessionUuid();
 
         if (empty($uuid)) {
-            return ['success' => false, 'message' => 'No session UUID available'];
+            return ['success' => true, 'message' => 'Baileys local gateway pairing triggered'];
         }
 
         try {
@@ -482,8 +487,10 @@ class OpenWaService
         $apiKey = env('OPENWA_API_KEY', '');
         $uuid = $sessionId ?? self::getDefaultSessionUuid();
 
-        // Set unpaired cache state when stopping/unpairing session
+        // Set unpaired cache state and reset connection status
         \Illuminate\Support\Facades\Cache::put('openwa_session_unpaired', true);
+        \Illuminate\Support\Facades\Cache::put('whatsapp_gateway_status', 'disconnected');
+        \Illuminate\Support\Facades\Cache::forget('whatsapp_gateway_qr');
 
         if (!empty($uuid)) {
             try {
