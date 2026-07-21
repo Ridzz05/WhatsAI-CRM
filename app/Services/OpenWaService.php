@@ -231,7 +231,10 @@ class OpenWaService
                 return $createRes->json()['id'];
             }
         } catch (\Exception $e) {
-            Log::error("OpenWA Resolve Session UUID Error: " . $e->getMessage());
+            // Silently return null when OpenWA server is offline or unreachable
+            if (!str_contains($e->getMessage(), 'Failed to connect')) {
+                Log::warning("OpenWA Resolve Session UUID: " . $e->getMessage());
+            }
         }
 
         return null;
