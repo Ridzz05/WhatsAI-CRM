@@ -257,73 +257,7 @@ class OpenWaService
      */
     public static function getQrCode($sessionId = null)
     {
-        $baseUrl = env('OPENWA_BASE_URL', 'http://localhost:2785');
-        $apiKey = env('OPENWA_API_KEY', '');
-        $uuid = $sessionId ?? self::getDefaultSessionUuid();
-
-        if (empty($uuid)) {
-            return [
-                'success' => false,
-                'message' => 'No session UUID available from OpenWA'
-            ];
-        }
-
-        try {
-            $client = Http::withoutVerifying()->timeout(5);
-            if (!empty($apiKey)) {
-                $client = $client->withHeaders(['X-API-Key' => $apiKey]);
-            }
-
-            // Ensure session is started first
-            $startRes = $client->post("{$baseUrl}/api/sessions/{$uuid}/start");
-
-            $response = $client->get("{$baseUrl}/api/sessions/{$uuid}/qr");
-            if ($response->successful()) {
-                $json = $response->json();
-                $rawQr = null;
-                if (is_array($json)) {
-                    $rawQr = $json['qrCode'] ?? $json['qr'] ?? $json['code'] ?? null;
-                }
-
-                if (empty($rawQr) && is_string($response->body())) {
-                    $body = trim($response->body());
-                    if (str_starts_with($body, 'data:') || str_starts_with($body, 'http')) {
-                        $rawQr = $body;
-                    }
-                }
-
-                if (!empty($rawQr)) {
-                    $qrImg = (str_starts_with($rawQr, 'data:') || str_starts_with($rawQr, 'http'))
-                        ? $rawQr
-                        : "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=" . urlencode($rawQr);
-
-                    return [
-                        'success' => true,
-                        'authenticated' => false,
-                        'qr' => $qrImg,
-                        'rawQr' => $rawQr,
-                        'data' => $json
-                    ];
-                }
-            } else {
-                $msg = strtolower($response->json()['message'] ?? '');
-                if (str_contains($msg, 'authenticated') || str_contains($msg, 'ready')) {
-                    $sessionDetails = $client->get("{$baseUrl}/api/sessions/{$uuid}");
-                    if ($sessionDetails->successful() && ($sessionDetails->json()['status'] ?? '') === 'ready' && !empty($sessionDetails->json()['phone'])) {
-                        \Illuminate\Support\Facades\Cache::forget('openwa_session_unpaired');
-                        return [
-                            'success' => true,
-                            'authenticated' => true,
-                            'message' => 'Session already authenticated'
-                        ];
-                    }
-                }
-            }
-        } catch (\Exception $e) {
-            // Ignore connection error to OpenWA REST server
-        }
-
-        // Fallback: Check if Baileys gateway (gateway.js) broadcasted a QR or status via /api/whatsapp/status
+        // 1. Check if Baileys gateway (gateway.js) broadcasted a QR or status via /api/whatsapp/status
         $gatewayStatus = \Illuminate\Support\Facades\Cache::get('whatsapp_gateway_status');
         if ($gatewayStatus === 'connected') {
             return [
@@ -346,6 +280,68 @@ class OpenWaService
                 'rawQr' => $cachedQr,
                 'source' => 'baileys_gateway'
             ];
+        }
+
+        // 2. Try OpenWA REST Server (Port 2785)
+        $baseUrl = env('OPENWA_BASE_URL', 'http://localhost:2785');
+        $apiKey = env('OPENWA_API_KEY', '');
+        $uuid = $sessionId ?? self::getDefaultSessionUuid();
+
+        if (!empty($uuid)) {
+            try {
+                $client = Http::withoutVerifying()->timeout(5);
+                if (!empty($apiKey)) {
+                    $client = $client->withHeaders(['X-API-Key' => $apiKey]);
+                }
+
+                // Ensure session is started first
+                $startRes = $client->post("{$baseUrl}/api/sessions/{$uuid}/start");
+
+                $response = $client->get("{$baseUrl}/api/sessions/{$uuid}/qr");
+                if ($response->successful()) {
+                    $json = $response->json();
+                    $rawQr = null;
+                    if (is_array($json)) {
+                        $rawQr = $json['qrCode'] ?? $json['qr'] ?? $json['code'] ?? null;
+                    }
+
+                    if (empty($rawQr) && is_string($response->body())) {
+                        $body = trim($response->body());
+                        if (str_starts_with($body, 'data:') || str_starts_with($body, 'http')) {
+                            $rawQr = $body;
+                        }
+                    }
+
+                    if (!empty($rawQr)) {
+                        $qrImg = (str_starts_with($rawQr, 'data:') || str_starts_with($rawQr, 'http'))
+                            ? $rawQr
+                            : "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=" . urlencode($rawQr);
+
+                        return [
+                            'success' => true,
+                            'authenticated' => false,
+                            'qr' => $qrImg,
+                            'rawQr' => $rawQr,
+                            'data' => $json
+                        ];
+                    }
+                } else {
+                    $msg = strtolower($response->json()['message'] ?? '');
+                    if (str_contains($msg, 'authenticated') || str_contains($msg, 'ready')) {
+                        $sessionDetails = $client->get("{$baseUrl}/api/sessions/{$uuid}");
+                        if ($sessionDetails->successful() && ($sessionDetails->json()['status'] ?? '') === 'ready' && !empty($sessionDetails->json()['phone'])) {
+                            \Illuminate\Support\Facades\Cache::forget('openwa_session_unpaired');
+                            return [
+                                'success' => true,
+                                'authenticated' => true,
+                                'message' => 'Session already authenticated'
+                            ];
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                // Ignore connection error to OpenWA REST server
+            }
         }
 
         return [
