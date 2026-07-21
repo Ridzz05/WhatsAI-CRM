@@ -38,6 +38,9 @@ export default function Dashboard() {
     const [sending, setSending] = useState(false);
     const [loadingChat, setLoadingChat] = useState(false);
 
+    // Mobile tab state: 'leads' | 'chat' | 'detail'
+    const [mobileTab, setMobileTab] = useState('leads');
+
     // Chat scroll reference
     const chatEndRef = useRef(null);
 
@@ -98,6 +101,7 @@ export default function Dashboard() {
     const selectLead = async (lead) => {
         setSelectedLead(lead);
         setLoadingChat(true);
+        setMobileTab('chat'); // Auto-switch to chat panel on mobile when lead selected
         try {
             const res = await fetch(route('crm.leads.chat', lead.id));
             const data = await res.json();
@@ -311,27 +315,44 @@ export default function Dashboard() {
             )}
 
             {/* Top KPI stats cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-5 relative z-10">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5 relative z-10">
                 <Card title="Total Leads" subtitle={`${stats.total_leads} Orang`} color="dark">
                     <span className="text-[10px] font-mono text-[#f5efe4]/40 mt-1 block">Seluruh nomor masuk</span>
                 </Card>
-                <Card title="Cold Leads (Score 0-40)" subtitle={`${stats.cold} Orang`} color="blue">
+                <Card title="Cold (0-40)" subtitle={`${stats.cold} Orang`} color="blue">
                     <span className="text-[10px] font-mono text-[#1a1714]/50 mt-1 block">Baru tanya-tanya info</span>
                 </Card>
-                <Card title="Warm Leads (Score 41-69)" subtitle={`${stats.warm} Orang`} color="yellow">
+                <Card title="Warm (41-69)" subtitle={`${stats.warm} Orang`} color="yellow">
                     <span className="text-[10px] font-mono text-[#1a1714]/50 mt-1 block">Tertarik promo & fasilitas</span>
                 </Card>
-                <Card title="Hot / Handover (Score >=70)" subtitle={`${stats.hot} Orang`} color="peach">
-                    <span className="text-[10px] font-mono text-[#1a1714]/50 mt-1 block">Siap daftar / jadwalkan visit</span>
+                <Card title="Hot / Handover" subtitle={`${stats.hot} Orang`} color="peach">
+                    <span className="text-[10px] font-mono text-[#1a1714]/50 mt-1 block">Siap daftar / visit</span>
                 </Card>
             </div>
 
+            {/* Mobile Tab Switcher — hidden on xl */}
+            <div className="xl:hidden flex items-center bg-[#1a1714] border border-[#ebe6dd]/10 rounded-2xl p-1 gap-1 relative z-10">
+                {[['leads','Leads','👥'], ['chat','Chat','💬'], ['detail','Detail','📋']].map(([tab, label, icon]) => (
+                    <button
+                        key={tab}
+                        onClick={() => setMobileTab(tab)}
+                        className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                            mobileTab === tab
+                                ? 'bg-[#e98425] text-[#1a1714]'
+                                : 'text-[#f5efe4]/50 hover:text-white'
+                        }`}
+                    >
+                        <span>{icon}</span> {label}
+                    </button>
+                ))}
+            </div>
+
             {/* Main CRM Grid */}
-            <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 relative z-10 min-h-[580px]">
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 sm:gap-6 relative z-10">
                 
                 {/* 1. LEFT SIDEBAR: Leads List (Col 3) */}
-                <div className="xl:col-span-3 flex flex-col gap-4">
-                    <div className="bg-[#1a1714] border border-[#ebe6dd]/10 rounded-[24px] p-5 flex-1 flex flex-col justify-between max-h-[580px] overflow-hidden">
+                <div className={`xl:col-span-3 flex flex-col gap-4 ${mobileTab !== 'leads' ? 'hidden xl:flex' : ''}`}>
+                    <div className="bg-[#1a1714] border border-[#ebe6dd]/10 rounded-[24px] p-4 sm:p-5 flex-1 flex flex-col justify-between overflow-hidden" style={{minHeight: '400px', maxHeight: '580px'}}>
                         <div>
                             <div className="flex items-center justify-between mb-4">
                                 <span className="text-xs font-bold text-white uppercase tracking-wider">Leads Chat</span>
@@ -430,8 +451,8 @@ export default function Dashboard() {
                 </div>
 
                 {/* 2. MIDDLE WORKSPACE: WhatsApp Chat Simulator Mockup (Col 6) */}
-                <div className="xl:col-span-6">
-                    <div className="bg-[#1a1714] border border-[#ebe6dd]/10 rounded-[24px] h-[580px] flex flex-col justify-between overflow-hidden relative">
+                <div className={`xl:col-span-6 ${mobileTab !== 'chat' ? 'hidden xl:block' : ''}`}>
+                    <div className="bg-[#1a1714] border border-[#ebe6dd]/10 rounded-[24px] flex flex-col justify-between overflow-hidden relative" style={{height: 'clamp(440px, 60vh, 580px)'}}>
                         
                         {selectedLead ? (
                             <>
@@ -533,8 +554,8 @@ export default function Dashboard() {
                 </div>
 
                 {/* 3. RIGHT PANEL: Leads Details & Action Panel (Col 3) */}
-                <div className="xl:col-span-3">
-                    <div className="bg-[#1a1714] border border-[#ebe6dd]/10 rounded-[24px] p-5 h-[580px] flex flex-col justify-between overflow-y-auto scrollbar-none">
+                <div className={`xl:col-span-3 ${mobileTab !== 'detail' ? 'hidden xl:block' : ''}`}>
+                    <div className="bg-[#1a1714] border border-[#ebe6dd]/10 rounded-[24px] p-4 sm:p-5 flex flex-col justify-between overflow-y-auto scrollbar-none" style={{minHeight: '400px', maxHeight: '580px'}}>
                         
                         {selectedLead ? (
                             <div className="flex flex-col gap-6">
