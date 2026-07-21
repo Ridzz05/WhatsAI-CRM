@@ -32,6 +32,7 @@ const LARAVEL_STATUS_URL = `${LARAVEL_BASE_URL}/api/whatsapp/status`;
 
 // Track connection state globally
 let isConnected = false;
+let latestQr = null;
 let heartbeatInterval = null;
 let sock = null;
 const botSentMessageIds = new Set();
@@ -60,11 +61,20 @@ async function startBot() {
         const { connection, lastDisconnect, qr } = update;
         
         if (qr) {
+            latestQr = qr;
             console.log('\n======================================================');
             console.log('   SILAKAN SCAN QR CODE BERIKUT DENGAN WHATSAPP ANDA');
             console.log('======================================================\n');
             qrcode.generate(qr, { small: true });
             await sendStatusReport('disconnected', qr);
+
+            // Periodically refresh QR to Laravel every 10s so 90s cache never expires while waiting for scan
+            if (heartbeatInterval) clearInterval(heartbeatInterval);
+            heartbeatInterval = setInterval(async () => {
+                if (!isConnected && latestQr) {
+                    await sendStatusReport('disconnected', latestQr);
+                }
+            }, 10000);
         }
         
         if (connection === 'close') {
@@ -80,7 +90,7 @@ async function startBot() {
             console.log(`Koneksi tertutup (Status: ${statusCode}). Reconnecting: ${shouldReconnect}`);
             
             // Notify Laravel gateway is disconnected
-            await sendStatusReport('disconnected');
+            await sendStatusReport('disconnected', latestQr);
 
             if (lastDisconnect?.error) {
                 console.log('Detail Error:', lastDisconnect.error.message || lastDisconnect.error);
@@ -94,6 +104,7 @@ async function startBot() {
             }
         } else if (connection === 'open') {
             isConnected = true;
+            latestQr = null; // Clear QR code once connected
             console.log('\n✅ GATEWAY WHATSAPP BAILEYS BERHASIL TERHUBUNG!');
             console.log('Gateway siap meneruskan chat masuk ke Laravel CRM.\n');
             
@@ -300,8 +311,28 @@ async function startBot() {
     });
 }
 
-// Start local HTTP server using built-in http module (no dependencies needed) to receive outgoing message requests from Laravel
 const server = http.createServer((req, res) => {
+    // Expose GET QR & status endpoint for direct query by Laravel
+    if (req.method === 'GET' && (req.url === '/qr' || req.url === '/api/qr')) {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({
+            success: true,
+            authenticated: isConnected,
+            qr: latestQr,
+            status: isConnected ? 'connected' : 'disconnected'
+        }));
+    }
+
+    if (req.method === 'GET' && (req.url === '/status' || req.url === '/api/status')) {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({
+            status: isConnected ? 'connected' : 'disconnected',
+            connected: isConnected,
+            phone: sock?.user?.id ? sock.user.id.split(':')[0] : null,
+            pushName: 'Loyal Fitness AI Assistant'
+        }));
+    }
+
     // Expose API send message endpoint
     if (req.method === 'POST' && req.url === '/api/send') {
         let body = '';

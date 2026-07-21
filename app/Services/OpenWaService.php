@@ -282,6 +282,37 @@ class OpenWaService
             ];
         }
 
+        // 1.5 Try direct query to local Baileys gateway server (Port 3000)
+        try {
+            $baileysRes = Http::withoutVerifying()->timeout(3)->get('http://localhost:3000/qr');
+            if ($baileysRes->successful()) {
+                $bData = $baileysRes->json();
+                if (!empty($bData['authenticated'])) {
+                    return [
+                        'success' => true,
+                        'authenticated' => true,
+                        'message' => 'WhatsApp Gateway is connected and authenticated'
+                    ];
+                }
+                if (!empty($bData['qr'])) {
+                    $rawQr = $bData['qr'];
+                    $qrImg = (str_starts_with($rawQr, 'data:') || str_starts_with($rawQr, 'http'))
+                        ? $rawQr
+                        : "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=" . urlencode($rawQr);
+
+                    return [
+                        'success' => true,
+                        'authenticated' => false,
+                        'qr' => $qrImg,
+                        'rawQr' => $rawQr,
+                        'source' => 'baileys_gateway_direct'
+                    ];
+                }
+            }
+        } catch (\Exception $e) {
+            // Ignore if port 3000 is not running
+        }
+
         // 2. Try OpenWA REST Server (Port 2785)
         $baseUrl = env('OPENWA_BASE_URL', 'http://localhost:2785');
         $apiKey = env('OPENWA_API_KEY', '');
