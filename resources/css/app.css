@@ -14,12 +14,6 @@
     --line: #ebe6dd;
     --accent: #e98425;
     --accent-2: #ff6b3d;
-    --tile-1: #ffe9bf;
-    --tile-2: #ffe1d9;
-    --tile-3: #f3e6ff;
-    --tile-4: #d2eecb;
-    --tile-5: #d6e7ff;
-    --tile-6: #ffd6f1;
   }
 
   body {
@@ -32,11 +26,55 @@
     color: #f5efe4;
     font-family: 'Inter', -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
   
   html, body, button, input, select, textarea {
     font-family: 'Inter', sans-serif;
   }
+}
+
+/* Light Theme Overrides */
+html.light body {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(233, 132, 37, 0.1), transparent 70%),
+    #f8fafc !important;
+  color: #0f172a !important;
+}
+
+html.light .bg-\[\#1a1714\],
+html.light .bg-\[\#0e0d0c\],
+html.light .bg-slate-900 {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+}
+
+html.light .bg-\[\#24201c\] {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.light .text-white {
+  color: #0f172a !important;
+}
+
+html.light .text-\[\#f5efe4\]\/50,
+html.light .text-\[\#f5efe4\]\/60,
+html.light .text-\[\#f5efe4\]\/70,
+html.light .text-slate-400 {
+  color: #64748b !important;
+}
+
+html.light .border-white\/10,
+html.light .border-white\/5,
+html.light .border-\[\#ebe6dd\]\/10 {
+  border-color: #e2e8f0 !important;
+}
+
+html.light .eyebrow-badge {
+  color: #475569 !important;
+  border-color: #cbd5e1 !important;
 }
 
 /* Custom scrollbars */

@@ -19,13 +19,39 @@ import {
     Lightning,
     ShieldSlash,
     TerminalWindow,
-    Bell
+    Bell,
+    Package,
+    Buildings,
+    Receipt,
+    Sun,
+    Moon
 } from '@phosphor-icons/react';
 
 export default function AdminLayout({ children, activeTab = 'dashboard', title = 'CRM Console' }) {
     const { auth } = usePage().props;
     const user = auth?.user || { name: 'M. Rizki Algipari', email: 'muhrizkialgipari@gmail.com' };
     const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    // Dark/Light Theme state
+    const [theme, setTheme] = useState(() => {
+        if (typeof window !== 'undefined') {
+            return localStorage.getItem('crm_theme') || 'dark';
+        }
+        return 'dark';
+    });
+
+    useEffect(() => {
+        localStorage.setItem('crm_theme', theme);
+        if (theme === 'light') {
+            document.documentElement.classList.add('light');
+        } else {
+            document.documentElement.classList.remove('light');
+        }
+    }, [theme]);
+
+    const toggleTheme = () => {
+        setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+    };
 
     // Close sidebar on route change (mobile UX)
     useEffect(() => {
@@ -99,6 +125,24 @@ export default function AdminLayout({ children, activeTab = 'dashboard', title =
             label: 'Knowledge Promos',
             icon: Tag,
             href: route('promos.index'),
+        },
+        {
+            id: 'products',
+            label: 'Katalog Produk',
+            icon: Package,
+            href: route('crm.products'),
+        },
+        {
+            id: 'branches',
+            label: 'Cabang UMKM',
+            icon: Buildings,
+            href: route('crm.branches'),
+        },
+        {
+            id: 'invoices',
+            label: 'Invoice QRIS',
+            icon: Receipt,
+            href: route('crm.invoices'),
         }
     ];
 
@@ -291,6 +335,25 @@ export default function AdminLayout({ children, activeTab = 'dashboard', title =
                             </div>
                             <span className="hidden md:block text-xs font-bold text-white truncate max-w-[120px]">{user.name}</span>
                         </div>
+
+                        {/* Theme Toggle Button (Dark / Light) */}
+                        <button
+                            onClick={toggleTheme}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/10 hover:bg-white/5 text-[10px] font-bold font-mono uppercase tracking-widest text-[#f5efe4]/70 hover:text-white transition-all cursor-pointer"
+                            title={theme === 'dark' ? 'Ganti ke Mode Terang' : 'Ganti ke Mode Gelap'}
+                        >
+                            {theme === 'dark' ? (
+                                <>
+                                    <Sun className="w-3.5 h-3.5 text-amber-400" weight="bold" />
+                                    <span className="hidden sm:inline">Light</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Moon className="w-3.5 h-3.5 text-indigo-400" weight="bold" />
+                                    <span className="hidden sm:inline">Dark</span>
+                                </>
+                            )}
+                        </button>
 
                         <Link 
                             href="/"

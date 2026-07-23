@@ -113,5 +113,58 @@ class DatabaseSeeder extends Seeder
             'features_list' => "- *Face ID Access:* Check-in secepat kilat tanpa kartu atau aplikasi, cukup hadapkan wajah ke kamera.\n- *AI Posture Analysis:* Analisis postur tubuh klinis secara real-time untuk koreksi gerakan latihan.\n- *Progress Tracking:* Pantau grafik perkembangan otot & lemak tubuh secara real-time di HP.\n- *AI Planner:* Program latihan personal yang dibuat khusus oleh AI.\n- *Fasilitas Premium:* Full AC, alat beban lengkap, studio kelas (Zumba, Yoga, Pilates), loker, shower, sauna, dan air minum gratis.",
             'trainers_list' => "- *Coach Puput* (Certified Instructor)\n- *Coach Kaka* (Certified Instructor)\n- *Coach Hengky* (Certified Instructor)\n- *Coach Solihin* (Certified Instructor)\n- *Coach Putri Sang* (Certified Instructor)\n- *Coach Daud Jonathan* (Certified Instructor)\n- *Coach Wawan Kurniawan* (Certified Instructor)",
         ]);
+
+        // 4. Create Default Branches
+        $branchIP = \App\Models\Branch::create([
+            'name' => 'Loyal Fitness IP Mall',
+            'code' => 'LF-IP',
+            'city' => 'Palembang',
+            'address' => 'International Plaza Mall Palembang Lantai 2',
+            'phone' => '6281234567890',
+            'is_active' => true,
+        ]);
+
+        $branchPS = \App\Models\Branch::create([
+            'name' => 'Loyal Fitness Prime Palembang Square',
+            'code' => 'LF-PS',
+            'city' => 'Palembang',
+            'address' => 'Palembang Square Mall Lantai 1 (24 Jam)',
+            'phone' => '6289876543210',
+            'is_active' => true,
+        ]);
+
+        // 5. Create Default Product Catalog (UMKM Items)
+        \App\Models\Product::create([
+            'branch_id' => $branchIP->id,
+            'name' => 'Whey Protein Isolate 2Lbs',
+            'sku' => 'SUPP-WHEY-01',
+            'category' => 'Suplemen',
+            'description' => 'Protein murni 25g per serving untuk mempercepat pembentukan otot.',
+            'price' => 450000.00,
+            'stock' => 25,
+            'is_active' => true,
+        ]);
+
+        \App\Models\Product::create([
+            'branch_id' => $branchIP->id,
+            'name' => 'Tas Gym Signature Loyal Fitness',
+            'sku' => 'MERCH-BAG-01',
+            'category' => 'Merchandise',
+            'description' => 'Tas duffel gym tahan air dengan kompartemen sepatu terpisah.',
+            'price' => 175000.00,
+            'stock' => 50,
+            'is_active' => true,
+        ]);
+
+        \App\Models\Product::create([
+            'branch_id' => $branchPS->id,
+            'name' => 'Voucher Presale Membership 12 Bulan (PS 24 Jam)',
+            'sku' => 'VOUCHER-PS-12M',
+            'category' => 'Voucher Presale',
+            'description' => 'Voucher presale akses 24 jam Loyal Fitness Prime Palembang Square.',
+            'price' => 2400000.00,
+            'stock' => 100,
+            'is_active' => true,
+        ]);
     }
 }

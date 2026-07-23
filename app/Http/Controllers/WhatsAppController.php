@@ -79,6 +79,10 @@ class WhatsAppController extends Controller
      */
     public function updateGatewayStatus(Request $request)
     {
+        if (!$this->verifyWebhookSecret($request)) {
+            return response()->json(['error' => 'Unauthorized gateway request'], 401);
+        }
+
         $request->validate([
             'status' => 'required|string',
             'qr' => 'nullable|string'
@@ -220,12 +224,26 @@ class WhatsAppController extends Controller
         return response()->json($responseData);
     }
 
+    private function verifyWebhookSecret(Request $request): bool
+    {
+        $secret = env('WHATSAPP_WEBHOOK_SECRET');
+        if (empty($secret)) {
+            return true;
+        }
+        $incomingSecret = $request->header('X-Gateway-Secret') ?? $request->input('secret');
+        return !empty($incomingSecret) && hash_equals($secret, (string) $incomingSecret);
+    }
+
     /**
      * Real Production WhatsApp Webhook (Supports OpenWA & Gateway REST integrations).
      * Excluded from CSRF validation in bootstrap/app.php.
      */
     public function handleWebhook(Request $request)
     {
+        if (!$this->verifyWebhookSecret($request)) {
+            return response()->json(['error' => 'Unauthorized webhook request'], 401);
+        }
+
         // 1. Detect OpenWA Event Payloads
         $event = $request->input('event') ?? $request->input('type');
         $data = $request->input('data') ?? $request->all();

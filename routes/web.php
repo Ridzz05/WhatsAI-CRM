@@ -38,6 +38,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Promo Management CRUD (Knowledge Base)
     Route::resource('/dashboard/promos', \App\Http\Controllers\PromoController::class)->names('promos');
 
+    // UMKM Suite: Product Catalog, Branches, & Invoices
+    Route::resource('/dashboard/products', \App\Http\Controllers\ProductController::class)->names([
+        'index' => 'crm.products',
+        'store' => 'products.store',
+        'destroy' => 'products.destroy',
+        'update' => 'products.update',
+    ]);
+    Route::get('/dashboard/branches', [\App\Http\Controllers\BranchController::class, 'index'])->name('crm.branches');
+    Route::post('/dashboard/branches', [\App\Http\Controllers\BranchController::class, 'store'])->name('branches.store');
+
+    Route::get('/dashboard/invoices', [\App\Http\Controllers\InvoiceController::class, 'index'])->name('crm.invoices');
+    Route::post('/dashboard/invoices/generate', [\App\Http\Controllers\InvoiceController::class, 'generate'])->name('invoices.generate');
+
     // System Settings Configuration
     Route::get('/dashboard/settings', [\App\Http\Controllers\WhatsAppController::class, 'settingsPage'])->name('crm.settings');
     Route::post('/dashboard/settings', [\App\Http\Controllers\WhatsAppController::class, 'updateSettings'])->name('crm.settings.update');

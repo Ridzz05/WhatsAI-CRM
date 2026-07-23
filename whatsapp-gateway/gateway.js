@@ -12,19 +12,28 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-// Dynamically read APP_URL from parent .env file to support both local and production environments
+// Dynamically read APP_URL and WHATSAPP_WEBHOOK_SECRET from parent .env file
 let LARAVEL_BASE_URL = 'http://localhost:8001';
+let WEBHOOK_SECRET = 'whatsai_secret_key_crm_2026';
 try {
     const envPath = path.join(__dirname, '../.env');
     if (fs.existsSync(envPath)) {
         const envContent = fs.readFileSync(envPath, 'utf8');
-        const match = envContent.match(/^APP_URL=(.*)$/m);
-        if (match && match[1]) {
-            LARAVEL_BASE_URL = match[1].trim().replace(/\/+$/, '');
+        const matchUrl = envContent.match(/^APP_URL=(.*)$/m);
+        if (matchUrl && matchUrl[1]) {
+            LARAVEL_BASE_URL = matchUrl[1].trim().replace(/\/+$/, '');
+        }
+        const matchSecret = envContent.match(/^WHATSAPP_WEBHOOK_SECRET=(.*)$/m);
+        if (matchSecret && matchSecret[1]) {
+            WEBHOOK_SECRET = matchSecret[1].trim();
         }
     }
 } catch (e) {
     console.error('⚠️ Gagal membaca berkas .env parent:', e.message);
+}
+
+if (WEBHOOK_SECRET) {
+    axios.defaults.headers.common['X-Gateway-Secret'] = WEBHOOK_SECRET;
 }
 
 const LARAVEL_WEBHOOK_URL = `${LARAVEL_BASE_URL}/api/whatsapp/webhook`;

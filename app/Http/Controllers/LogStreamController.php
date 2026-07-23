@@ -27,10 +27,8 @@ class LogStreamController extends Controller
             return response()->json(['logs' => [], 'raw' => '']);
         }
 
-        // Read last 150 lines of log file
-        $content = File::get($logPath);
-        $lines = explode("\n", $content);
-        $recentLines = array_slice(array_filter($lines), -150);
+        // Read last 150 lines of log file using memory-efficient tailing
+        $recentLines = array_slice(array_filter($this->tailFile($logPath, 150)), -150);
 
         $parsedLogs = [];
 
@@ -97,5 +95,32 @@ class LogStreamController extends Controller
             'success' => true,
             'message' => 'Log terminal console berhasil dibersihkan.'
         ]);
+    }
+
+    /**
+     * Efficiently read the last N lines of a file without loading entire file into memory.
+     */
+    private function tailFile($filepath, $lines = 150, $buffer = 4096)
+    {
+        $f = @fopen($filepath, "rb");
+        if (!$f) return [];
+
+        fseek($f, -1, SEEK_END);
+        if (fread($f, 1) != "\n") $lines--;
+
+        $output = '';
+        $chunk = '';
+
+        while (ftell($f) > 0 && $lines >= 0) {
+            $seek = min(ftell($f), $buffer);
+            fseek($f, -$seek, SEEK_CUR);
+            $output = ($chunk = fread($f, $seek)) . $output;
+            fseek($f, -mb_strlen($chunk, '8bit'), SEEK_CUR);
+            $lines -= substr_count($chunk, "\n");
+        }
+
+        fclose($f);
+
+        return explode("\n", $output);
     }
 }

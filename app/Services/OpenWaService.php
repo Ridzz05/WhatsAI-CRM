@@ -476,6 +476,8 @@ class OpenWaService
         }
 
         // Fetch or create fresh default session for OpenWA REST
+        $baseUrl = env('OPENWA_BASE_URL', 'http://localhost:2785');
+        $apiKey = env('OPENWA_API_KEY', '');
         $uuid = self::getDefaultSessionUuid();
 
         if (empty($uuid)) {

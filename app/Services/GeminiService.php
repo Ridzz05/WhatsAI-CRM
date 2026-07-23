@@ -17,7 +17,8 @@ class GeminiService
             return self::fallbackResponse($conversationHistory);
         }
 
-        // Format conversation history for Gemini API
+        // Format conversation history for Gemini API (Limit to recent 15 messages to prevent context window overflow)
+        $recentHistory = array_slice($conversationHistory, -15);
         $contents = [];
         
         // System instruction user message
@@ -31,7 +32,7 @@ class GeminiService
         ];
 
         // Format history
-        foreach ($conversationHistory as $chat) {
+        foreach ($recentHistory as $chat) {
             $contents[] = [
                 'role' => $chat['sender'] === 'user' ? 'user' : 'model',
                 'parts' => [['text' => $chat['message']]]
@@ -39,10 +40,16 @@ class GeminiService
         }
 
         try {
-            // Using HTTP Client to call Gemini API directly with SSL verification disabled for local dev compatibility
-            $response = Http::withoutVerifying()->withHeaders([
+            // Using HTTP Client to call Gemini API directly
+            $client = Http::withHeaders([
                 'Content-Type' => 'application/json'
-            ])->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={$apiKey}", [
+            ]);
+
+            if (app()->environment('local', 'testing') || env('SKIP_SSL_VERIFY', false)) {
+                $client = $client->withoutVerifying();
+            }
+
+            $response = $client->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={$apiKey}", [
                 'contents' => $contents,
                 'generationConfig' => [
                     'temperature' => 0.7,
