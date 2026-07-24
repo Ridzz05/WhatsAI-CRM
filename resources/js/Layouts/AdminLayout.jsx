@@ -210,12 +210,12 @@ export default function AdminLayout({ children, activeTab = 'dashboard', title =
             <div className="pointer-events-none fixed inset-0 z-0 bg-gradient-to-br from-[#e98425]/5 via-transparent to-transparent opacity-80" />
 
             {/* ─── SIDEBAR ───────────────────────────────────────────────────── */}
-            {/* Desktop: static at lg+. Mobile/Tablet: off-canvas drawer */}
+            {/* Desktop: fixed on left. Mobile/Tablet: off-canvas drawer */}
             <aside className={`
-                fixed inset-y-0 left-0 z-50 w-64 bg-[#110f0e] border-r border-[#ebe6dd]/10 
+                fixed inset-y-0 left-0 z-50 w-64 h-screen bg-[#110f0e] border-r border-[#ebe6dd]/10 
                 flex flex-col justify-between
                 transition-transform duration-300 ease-in-out
-                lg:translate-x-0 lg:static lg:z-auto
+                lg:translate-x-0 lg:fixed lg:top-0 lg:left-0 lg:z-40
                 ${sidebarOpen ? 'translate-x-0 shadow-2xl shadow-black/60' : '-translate-x-full'}
             `}>
                 <div className="flex flex-col gap-6 py-6 px-5 overflow-y-auto flex-1">
@@ -308,7 +308,7 @@ export default function AdminLayout({ children, activeTab = 'dashboard', title =
             )}
 
             {/* ─── MAIN CONTENT AREA ─────────────────────────────────────────── */}
-            <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
+            <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto lg:pl-64">
                 
                 {/* Topbar Header */}
                 <header className="h-14 sm:h-16 border-b border-[#ebe6dd]/10 px-4 sm:px-6 flex items-center justify-between shrink-0 relative z-30 bg-[#0d0c0b]/90 backdrop-blur-md sticky top-0">
