@@ -230,7 +230,7 @@ export default function AdminLayout({ children, activeTab = 'dashboard', title =
                             />
                             <div className="flex flex-col leading-tight min-w-0">
                                 <span className="font-extrabold text-base tracking-tight text-white font-sans flex items-center gap-1">
-                                    WhatsAI <span className="text-[10px] font-mono font-bold bg-[#e98425]/20 text-[#e98425] px-1.5 py-0.5 rounded border border-[#e98425]/30">v2.0</span>
+                                    WhatsAI
                                 </span>
                                 <span className="text-[10.5px] text-[#f5efe4]/40 font-mono truncate">Workspace Admin</span>
                             </div>
@@ -325,7 +325,7 @@ export default function AdminLayout({ children, activeTab = 'dashboard', title =
                         {/* Page Title */}
                         <div className="flex flex-col">
                             <h2 className="font-bold text-sm text-white font-sans leading-tight line-clamp-1">{title}</h2>
-                            <span className="text-[10px] text-[#f5efe4]/40 font-mono hidden sm:block">WhatsAI CRM v2.0</span>
+                            <span className="text-[10px] text-[#f5efe4]/40 font-mono hidden sm:block">WhatsAI CRM</span>
                         </div>
                     </div>
 
