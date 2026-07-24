@@ -35,7 +35,7 @@
 }
 
 /* ==========================================================================
-   PERFECTED PROPORTIONAL LIGHT THEME SYSTEM
+   PRECISION TEXT COLOR INVERSION & SURFACES SYSTEM
    ========================================================================== */
 
 /* 1. App Main Background */
@@ -66,7 +66,6 @@ html.light .bg-slate-900,
 html.light .bg-slate-950 {
   background-color: #ffffff !important;
   border-color: #e2e8f0 !important;
-  color: #0f172a !important;
 }
 
 /* 3. Sub-cards, Table Headers, Filter Bars & Secondary Surfaces */
@@ -98,7 +97,9 @@ html.light .terminal-window .text-\[\#f5efe4\]\/40 {
   color: rgba(245, 239, 228, 0.9) !important;
 }
 
-/* 5. Headings & Typography */
+/* 5. Precision Text Color Inversion Rules */
+
+/* Primary Headings & Bold Text */
 html.light h1:not(.terminal-window *),
 html.light h2:not(.terminal-window *),
 html.light h3:not(.terminal-window *),
@@ -107,19 +108,40 @@ html.light td:not(.terminal-window *),
 html.light header h2,
 html.light header span.font-bold,
 html.light aside span.font-bold,
-html.light aside a.font-bold {
+html.light aside a.font-bold,
+html.light div.text-white:not(button *):not(.bg-\[\#e98425\] *):not(.bg-amber-500 *):not(.bg-emerald-500 *):not(.bg-indigo-500 *):not(.bg-red-500 *):not(.terminal-window *),
+html.light p.text-white:not(button *):not(.terminal-window *),
+html.light span.text-white:not(button *):not(.terminal-window *) {
   color: #0f172a !important;
 }
 
-/* Subtext & Labels in Light Mode */
+/* Muted Subtext & Descriptions */
+html.light .text-\[\#f5efe4\]\/90:not(.terminal-window *),
 html.light .text-\[\#f5efe4\]\/80:not(.terminal-window *),
-html.light .text-\[\#f5efe4\]\/70:not(.terminal-window *),
+html.light .text-\[\#f5efe4\]\/70:not(.terminal-window *) {
+  color: #334155 !important;
+}
+
 html.light .text-\[\#f5efe4\]\/60:not(.terminal-window *),
 html.light .text-\[\#f5efe4\]\/50:not(.terminal-window *),
 html.light .text-\[\#f5efe4\]\/40:not(.terminal-window *),
+html.light .text-\[\#f5efe4\]\/30:not(.terminal-window *),
 html.light .text-slate-400,
 html.light .text-slate-500 {
+  color: #64748b !important;
+}
+
+/* Form Labels & Table Headers */
+html.light label:not(.terminal-window *),
+html.light th:not(.terminal-window *) {
   color: #475569 !important;
+}
+
+/* Inline Code Snippets */
+html.light code:not(.terminal-window *) {
+  background-color: #f1f5f9 !important;
+  color: #d97706 !important;
+  border-color: #cbd5e1 !important;
 }
 
 /* Borders in Light Mode */
