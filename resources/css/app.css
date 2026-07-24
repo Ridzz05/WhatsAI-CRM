@@ -35,12 +35,12 @@
 }
 
 /* ==========================================================================
-   PROPORTIONAL LIGHT THEME SYSTEM OVERRIDES
-   Targeting container surfaces & text headers precisely without breaking
-   button contrasts, status pills, or active badges.
+   AIRTIGHT PROPORTIONAL LIGHT THEME SYSTEM
+   Switches background containers, cards, tables, headers, and text smoothly
+   while strictly preserving button contrast, badges, and status highlights.
    ========================================================================== */
 
-/* 1. Body & App Container */
+/* 1. App Background & Main Canvas */
 html.light body {
   background:
     radial-gradient(ellipse 80% 50% at 50% -10%, rgba(233, 132, 37, 0.08), transparent 70%),
@@ -52,38 +52,41 @@ html.light main {
   background-color: #f1f5f9 !important;
 }
 
-/* 2. Top Header & Sidebar Surfaces */
+/* 2. Sidebars, Top Headers, Mobile Navbars & Modals */
 html.light header,
-html.light aside {
-  background-color: #ffffff !important;
-  border-color: #e2e8f0 !important;
-}
-
-html.light aside div.bg-\[\#0d0c0b\],
-html.light aside div.bg-\[\#12100e\] {
-  background-color: #f8fafc !important;
-  border-color: #e2e8f0 !important;
-}
-
-/* 3. Cards & Panels */
+html.light aside,
+html.light nav,
+html.light .bg-\[\#0d0c0b\],
+html.light .bg-\[\#090807\],
+html.light .bg-\[\#0e0d0c\],
+html.light .bg-\[\#110f0e\],
+html.light .bg-\[\#12100e\],
+html.light .bg-\[\#161412\],
 html.light .bg-\[\#1a1714\],
-html.light .bg-slate-900 {
+html.light .bg-slate-900,
+html.light .bg-slate-950 {
   background-color: #ffffff !important;
   border-color: #e2e8f0 !important;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -1px rgba(0, 0, 0, 0.02) !important;
 }
 
+/* 3. Sub-cards, Table Headers, Hover States & Secondary Panels */
 html.light .bg-\[\#24201c\],
-html.light .bg-slate-950 {
-  background-color: #f8fafc !important;
-  border-color: #e2e8f0 !important;
+html.light .bg-\[\#2d2924\],
+html.light .hover\:bg-\[\#24201c\]:hover,
+html.light .hover\:bg-\[\#2d2924\]:hover,
+html.light .hover\:bg-white\/5:hover,
+html.light thead.bg-\[\#24201c\] {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
 }
 
-/* 4. Headings & Body Text inside Panels (Preserves Button & Badge Contrast) */
+/* 4. Headings & Content Text (Restricted to containers so button text stays untouched) */
 html.light .bg-\[\#1a1714\] h1,
 html.light .bg-\[\#1a1714\] h2,
 html.light .bg-\[\#1a1714\] h3,
 html.light .bg-\[\#1a1714\] h4,
+html.light .bg-\[\#1a1714\] td,
+html.light .bg-\[\#1a1714\] p.text-white,
 html.light header h2,
 html.light header span.font-bold,
 html.light aside span.font-bold,
@@ -91,20 +94,26 @@ html.light aside a.font-bold {
   color: #0f172a !important;
 }
 
-html.light .text-\[\#f5efe4\]\/50,
-html.light .text-\[\#f5efe4\]\/60,
+/* Subtext & Labels in Light Mode */
+html.light .text-\[\#f5efe4\]\/80,
 html.light .text-\[\#f5efe4\]\/70,
-html.light .text-slate-400 {
-  color: #64748b !important;
+html.light .text-\[\#f5efe4\]\/60,
+html.light .text-\[\#f5efe4\]\/50,
+html.light .text-\[\#f5efe4\]\/40,
+html.light .text-slate-400,
+html.light .text-slate-500 {
+  color: #475569 !important;
 }
 
+/* Borders in Light Mode */
 html.light .border-white\/10,
 html.light .border-white\/5,
-html.light .border-\[\#ebe6dd\]\/10 {
+html.light .border-\[\#ebe6dd\]\/10,
+html.light .border-\[\#ebe6dd\]\/20 {
   border-color: #e2e8f0 !important;
 }
 
-/* 5. Inputs & Selects in Light Mode */
+/* 5. Form Elements (Inputs, Selects, Textareas) */
 html.light input[type="text"],
 html.light input[type="number"],
 html.light input[type="date"],
@@ -120,7 +129,7 @@ html.light select option {
   color: #0f172a !important;
 }
 
-/* 6. Eyebrow Badge */
+/* 6. Eyebrow Badge & Micro Badges */
 html.light .eyebrow-badge {
   color: #475569 !important;
   border-color: #cbd5e1 !important;
