@@ -1,516 +1,209 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
-import axios from 'axios';
 import AdminLayout from '@/Layouts/AdminLayout';
-import Breadcrumb from '@/Components/Breadcrumb';
-import Alert from '@/Components/Alert';
+import TextInput from '@/Components/TextInput';
+import InputLabel from '@/Components/InputLabel';
+import PrimaryButton from '@/Components/PrimaryButton';
 import ConfirmModal from '@/Components/ConfirmModal';
 import { 
     DeviceMobile, 
-    ArrowClockwise, 
+    Plus, 
+    Trash, 
     QrCode, 
-    Cpu, 
     WifiHigh, 
-    BatteryHigh, 
-    ShieldCheck,
-    Broadcast,
-    Copy,
-    Check,
-    Browsers,
-    Plugs,
+    CheckCircle, 
+    Warning, 
+    Buildings, 
+    Phone, 
     PlugsConnected,
-    X,
-    Key,
-    PhoneCall
+    Plugs
 } from '@phosphor-icons/react';
 
-export default function DeviceConnected({ auth }) {
-    const [isConnected, setIsConnected] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [actionLoading, setActionLoading] = useState(false);
-    const [copied, setCopied] = useState(false);
-    const [openWaStatus, setOpenWaStatus] = useState(null);
-    const [alertData, setAlertData] = useState(null);
+export default function DeviceConnected({ devices = [], branches = [] }) {
+    const [name, setName] = useState('');
+    const [branchId, setBranchId] = useState('');
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [selectedDeleteId, setSelectedDeleteId] = useState(null);
 
-    // Confirm Unpair Modal State
-    const [showUnpairModal, setShowUnpairModal] = useState(false);
+    const [selectedQrDevice, setSelectedQrDevice] = useState(null);
 
-    // Pair Modal & Code State
-    const [showPairModal, setShowPairModal] = useState(false);
-    const [pairingMode, setPairingMode] = useState('qr'); // 'qr' or 'code'
-    const [qrCodeData, setQrCodeData] = useState(null);
-    const [qrError, setQrError] = useState(null);
-    const [pairingCode, setPairingCode] = useState(null);
-    const [pairingCodeLoading, setPairingCodeLoading] = useState(false);
-    const [phoneInput, setPhoneInput] = useState('');
-
-    const deviceStats = {
-        phone: isConnected 
-            ? (openWaStatus?.phone || "Menunggu Pemindaian QR / Terhubung") 
-            : "Belum Terhubung",
-        pushName: openWaStatus?.pushName || "Loyal Fitness AI Assistant",
-        platform: "OpenWA Gateway Server (Baileys Engine)",
-        port: 2785,
-        laravelPort: 8001,
-        battery: openWaStatus?.battery ?? 98,
-        lastSeen: isConnected ? "Online (Real-time)" : "Offline",
-        swaggerUrl: "http://localhost:2785/api/docs"
-    };
-
-    const fetchStatus = () => {
-        setLoading(true);
-        axios.get(route('crm.openwa.status'))
-            .then(res => {
-                setOpenWaStatus(res.data);
-                setIsConnected(res.data?.connected === true);
-            })
-            .catch(() => {})
-            .finally(() => setLoading(false));
-    };
-
-    useEffect(() => {
-        fetchStatus();
-    }, []);
-
-    const copyWebhook = () => {
-        navigator.clipboard.writeText("http://localhost:8001/api/whatsapp/webhook");
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-    };
-
-    // Poll QR Code every 3s when pairing modal is open & auto-close when authenticated
-    useEffect(() => {
-        let timer;
-        if (!showPairModal || pairingMode !== 'qr') {
-            return;
-        }
-
-        const fetchQr = () => {
-            axios.get(route('crm.openwa.qr'))
-                .then(res => {
-                    setQrError(null);
-                    if (res.data?.authenticated === true) {
-                        // Only close if we detect REAL authentication (has phone info)
-                        clearInterval(timer);
-                        setShowPairModal(false);
-                        setQrCodeData(null);
-                        setIsConnected(true);
-                        setAlertData({
-                            type: 'success',
-                            title: 'WhatsApp Terhubung!',
-                            message: 'Perangkat WhatsApp berhasil diautentikasi dan ditautkan.'
-                        });
-                        fetchStatus();
-                    } else if (res.data?.qr) {
-                        setQrCodeData(res.data.qr);
-                    } else {
-                        // QR not ready yet — keep spinner
-                        setQrCodeData(null);
-                    }
-                })
-                .catch(() => {
-                    setQrError('Gagal memuat QR. Pastikan OpenWA Gateway aktif.');
-                });
-        };
-
-        // Delay first fetch slightly to allow session start to propagate
-        const initTimer = setTimeout(() => {
-            fetchQr();
-            timer = setInterval(fetchQr, 3000);
-        }, 800);
-
-        return () => {
-            clearTimeout(initTimer);
-            if (timer) clearInterval(timer);
-        };
-    }, [showPairModal, pairingMode]);
-
-    // 1. Handle Pair Device — use axios to avoid page reload / modal close
-    const handlePairDevice = () => {
-        // Reset all stale state before opening modal
-        setQrCodeData(null);
-        setQrError(null);
-        setPairingCode(null);
-        setPhoneInput('');
-        setPairingMode('qr');
-        setActionLoading(true);
-
-        // Call pair endpoint via axios (NOT router.post) to avoid Inertia navigation
-        axios.post(route('crm.openwa.pair'))
-            .then(() => {
-                setActionLoading(false);
-                setShowPairModal(true); // Open modal AFTER session start succeeds
-            })
-            .catch(() => {
-                setActionLoading(false);
-                setShowPairModal(true); // Still open modal — QR will retry
-            });
-    };
-
-    // Generate 8-Digit Pairing Code — use axios to get real code from OpenWA
-    const handleGetPairingCode = (e) => {
+    const handleCreateDevice = (e) => {
         e.preventDefault();
-        if (!phoneInput.trim()) return;
-        setPairingCodeLoading(true);
-        setPairingCode(null);
+        if (!name.trim()) return;
 
-        axios.post(route('crm.openwa.pairing-code'), { phone: phoneInput })
-            .then(res => {
-                const code = res.data?.code || res.data?.pairingCode || null;
-                setPairingCode(code || 'Gagal ambil kode');
-            })
-            .catch(() => {
-                setPairingCode('Gagal terhubung ke OpenWA');
-            })
-            .finally(() => setPairingCodeLoading(false));
+        router.post(route('devices.store'), {
+            name,
+            branch_id: branchId || null,
+        }, {
+            onSuccess: () => {
+                setName('');
+            }
+        });
     };
 
-    // 2. Handle Unpair Device Execution — use axios to avoid page reload
-    const executeUnpair = () => {
-        setShowUnpairModal(false);
-        setActionLoading(true);
+    const confirmDelete = (id) => {
+        setSelectedDeleteId(id);
+        setDeleteModalOpen(true);
+    };
 
-        axios.post(route('crm.openwa.unpair'))
-            .then(() => {
-                setIsConnected(false);
-                setOpenWaStatus(null); // Clear stale status to prevent false auth detection
-                setAlertData({
-                    type: 'warning',
-                    title: 'Perangkat Diputus',
-                    message: 'Perangkat WhatsApp berhasil diputus (unpaired). Sesi dihentikan.'
-                });
-            })
-            .catch(() => {
-                setAlertData({
-                    type: 'error',
-                    title: 'Gagal Memutus Koneksi',
-                    message: 'Terjadi kesalahan saat memutus koneksi. Coba lagi.'
-                });
-            })
-            .finally(() => setActionLoading(false));
+    const executeDelete = () => {
+        if (!selectedDeleteId) return;
+        router.delete(route('devices.destroy', selectedDeleteId), {
+            onSuccess: () => {
+                setDeleteModalOpen(false);
+                setSelectedDeleteId(null);
+            }
+        });
     };
 
     return (
-        <AdminLayout activeTab="device" title="Status Perangkat WhatsApp Gateway">
-            <Head title="Device Connected - WhatsAI CRM" />
+        <AdminLayout activeTab="device" title="Multi-Device WhatsApp Manager">
+            <Head title="Manajemen Multi-Device WhatsApp" />
 
-            {/* Reusable Breadcrumb Component */}
-            <Breadcrumb items={[{ label: 'Device Connected' }]} />
-
-            {/* Reusable Alert Component */}
-            {alertData && (
-                <div className="mb-4">
-                    <Alert 
-                        type={alertData.type}
-                        title={alertData.title}
-                        message={alertData.message}
-                        onClose={() => setAlertData(null)}
-                    />
-                </div>
-            )}
-
-            {/* Page Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-[#ebe6dd]/10 mb-6">
-                <div>
-                    <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-3">
-                        Perangkat Terhubung (OpenWA Stack)
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider ${
-                            isConnected 
-                                ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' 
-                                : 'bg-red-500/15 text-red-400 border border-red-500/30'
-                        }`}>
-                            <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`} />
-                            {isConnected ? 'Terhubung (Online)' : 'Terputus (Unpaired)'}
+            <div className="flex flex-col xl:flex-row gap-6 relative z-10 p-1">
+                {/* Left Side: Create New Device Form */}
+                <div className="w-full xl:w-96 shrink-0">
+                    <div className="bg-[#1a1714] border border-[#ebe6dd]/10 p-6 rounded-[24px] shadow-lg sticky top-6">
+                        <span className="eyebrow-badge mb-4">
+                            <span className="dot"></span>Multi-Session Engine
                         </span>
-                    </h1>
-                    <p className="text-xs text-[#f5efe4]/60 mt-1">
-                        Kelola koneksi OpenWA API Gateway Server untuk sinkronisasi pesan WhatsApp & OpenAI Auto-responder.
-                    </p>
-                </div>
 
-                <div className="flex items-center gap-3 flex-wrap">
-                    {/* Action Buttons: Pair vs Unpair */}
-                    {isConnected ? (
-                        <button
-                            onClick={() => setShowUnpairModal(true)}
-                            disabled={actionLoading}
-                            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-500/15 hover:bg-red-500/25 text-red-400 text-xs font-bold border border-red-500/30 transition-all disabled:opacity-50"
-                        >
-                            <Plugs className="w-4 h-4" weight="bold" />
-                            Unpair Device
-                        </button>
-                    ) : (
-                        <button
-                            onClick={handlePairDevice}
-                            disabled={actionLoading}
-                            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 text-xs font-bold border border-emerald-500/30 transition-all disabled:opacity-50 shadow-lg shadow-emerald-500/10"
-                        >
-                            <PlugsConnected className="w-4 h-4" weight="bold" />
-                            Pair Device Baru
-                        </button>
-                    )}
+                        <h2 className="font-extrabold text-xl text-white mt-4 mb-2">
+                            Tambah <span className="serif-title italic text-[#e98425]">Perangkat WA</span>
+                        </h2>
+                        <p className="text-xs text-[#f5efe4]/50 leading-relaxed mb-6">
+                            Tambahkan nomor WhatsApp / perangkat baru untuk cabang atau CS individual. Setiap perangkat berjalan independen.
+                        </p>
 
-                    <a
-                        href={deviceStats.swaggerUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#e98425]/15 hover:bg-[#e98425]/25 text-[#e98425] text-xs font-bold border border-[#e98425]/30 transition-all"
-                    >
-                        <Browsers className="w-4 h-4" weight="bold" />
-                        Swagger API Docs
-                    </a>
-
-                    <button 
-                        onClick={fetchStatus}
-                        disabled={loading}
-                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white text-xs font-bold border border-white/10 transition-all disabled:opacity-50"
-                    >
-                        <ArrowClockwise className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} weight="bold" />
-                        Refresh Status
-                    </button>
-                </div>
-            </div>
-
-            {/* Grid Status Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                
-                {/* Device Info Card */}
-                <div className="md:col-span-2 bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-6 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
-                        <DeviceMobile className="w-48 h-48 text-white" />
-                    </div>
-
-                    <div className="flex items-center gap-4 mb-6">
-                        <div className="w-14 h-14 rounded-2xl bg-[#e98425]/10 border border-[#e98425]/30 flex items-center justify-center text-[#e98425]">
-                            <DeviceMobile className="w-7 h-7" weight="duotone" />
-                        </div>
-                        <div>
-                            <h2 className="text-lg font-extrabold text-white">{deviceStats.pushName}</h2>
-                            <p className="text-xs font-mono text-[#e98425]">{deviceStats.phone}</p>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-[#ebe6dd]/10">
-                        <div className="bg-white/5 rounded-xl p-3.5 border border-white/5">
-                            <span className="text-[10px] font-mono uppercase tracking-wider text-[#f5efe4]/40 block mb-1">Gateway Engine</span>
-                            <span className="text-xs font-bold text-white flex items-center gap-2">
-                                <Cpu className="w-4 h-4 text-[#e98425]" /> {deviceStats.platform}
-                            </span>
-                        </div>
-
-                        <div className="bg-white/5 rounded-xl p-3.5 border border-white/5">
-                            <span className="text-[10px] font-mono uppercase tracking-wider text-[#f5efe4]/40 block mb-1">Status Koneksi</span>
-                            <span className={`text-xs font-bold flex items-center gap-2 ${isConnected ? 'text-emerald-400' : 'text-red-400'}`}>
-                                <WifiHigh className="w-4 h-4" /> {deviceStats.lastSeen}
-                            </span>
-                        </div>
-
-                        <div className="bg-white/5 rounded-xl p-3.5 border border-white/5">
-                            <span className="text-[10px] font-mono uppercase tracking-wider text-[#f5efe4]/40 block mb-1">Status Baterai HP</span>
-                            <span className="text-xs font-bold text-white flex items-center gap-2">
-                                <BatteryHigh className="w-4 h-4 text-emerald-400" /> {deviceStats.battery}% (Mengisi Daya)
-                            </span>
-                        </div>
-
-                        <div className="bg-white/5 rounded-xl p-3.5 border border-white/5">
-                            <span className="text-[10px] font-mono uppercase tracking-wider text-[#f5efe4]/40 block mb-1">Port Service</span>
-                            <span className="text-xs font-bold font-mono text-white flex items-center gap-2">
-                                <Broadcast className="w-4 h-4 text-[#e98425]" /> OpenWA :{deviceStats.port} | CRM :{deviceStats.laravelPort}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* QR Code / Connection Control Card */}
-                <div className="bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-6 flex flex-col justify-between items-center text-center">
-                    <div className="w-full flex items-center justify-between pb-3 border-b border-[#ebe6dd]/10">
-                        <span className="text-xs font-bold text-white flex items-center gap-2">
-                            <QrCode className="w-4 h-4 text-[#e98425]" /> WhatsApp Session
-                        </span>
-                        <span className={`text-[10px] font-mono px-2 py-0.5 rounded border ${
-                            isConnected 
-                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
-                                : 'bg-red-500/10 text-red-400 border-red-500/20'
-                        }`}>
-                            {isConnected ? 'Paired' : 'Unpaired'}
-                        </span>
-                    </div>
-
-                    <div className="my-6 p-4 bg-white rounded-2xl border-4 border-[#e98425]/30 shadow-2xl flex flex-col items-center justify-center">
-                        {isConnected ? (
-                            <div className="w-36 h-36 bg-emerald-50 rounded-xl flex flex-col items-center justify-center p-3 text-center">
-                                <ShieldCheck className="w-16 h-16 text-emerald-600 mb-2" weight="duotone" />
-                                <span className="text-[10px] font-bold text-emerald-900 leading-tight">Session OpenWA Terverifikasi</span>
+                        <form onSubmit={handleCreateDevice} className="flex flex-col gap-4">
+                            <div>
+                                <InputLabel htmlFor="name" value="Nama Perangkat *" />
+                                <TextInput
+                                    id="name"
+                                    placeholder="Contoh: WA CS Cabang PS 24 Jam"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    className="mt-1 block w-full"
+                                    required
+                                />
                             </div>
-                        ) : (
-                            <div className="w-36 h-36 bg-amber-50 rounded-xl flex flex-col items-center justify-center p-3 text-center">
-                                <QrCode className="w-16 h-16 text-amber-600 mb-2" weight="duotone" />
-                                <span className="text-[10px] font-bold text-amber-900 leading-tight">Klik Pair Device untuk Scan QR</span>
-                            </div>
-                        )}
-                    </div>
 
-                    {isConnected ? (
-                        <button
-                            onClick={() => setShowUnpairModal(true)}
-                            className="w-full py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold border border-red-500/30 transition-all flex items-center justify-center gap-2"
-                        >
-                            <Plugs className="w-4 h-4" /> Putus Koneksi (Unpair)
-                        </button>
-                    ) : (
-                        <button
-                            onClick={handlePairDevice}
-                            className="w-full py-2.5 rounded-xl bg-[#e98425] hover:bg-[#d4741c] text-[#1a1714] text-xs font-extrabold shadow-lg shadow-[#e98425]/15 transition-all flex items-center justify-center gap-2"
-                        >
-                            <PlugsConnected className="w-4 h-4" /> Hubungkan (Pair Device)
-                        </button>
-                    )}
-                </div>
-            </div>
-
-            {/* Reusable ConfirmModal for Unpairing Confirmation */}
-            <ConfirmModal 
-                isOpen={showUnpairModal}
-                title="Putus Koneksi Device?"
-                message="Apakah Anda yakin ingin memutus koneksi (unpair) perangkat WhatsApp dari OpenWA Gateway?"
-                confirmText="Ya, Unpair Device"
-                cancelText="Batal"
-                type="danger"
-                onConfirm={executeUnpair}
-                onCancel={() => setShowUnpairModal(false)}
-            />
-
-            {/* PAIRING MODAL */}
-            {showPairModal && (
-                <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="bg-[#141210] border border-[#ebe6dd]/20 rounded-2xl w-full max-w-md p-6 flex flex-col gap-5 relative shadow-2xl">
-                        
-                        <button 
-                            onClick={() => setShowPairModal(false)}
-                            className="absolute top-4 right-4 text-[#f5efe4]/40 hover:text-white"
-                        >
-                            <X className="w-5 h-5" />
-                        </button>
-
-                        <div className="border-b border-[#ebe6dd]/10 pb-3">
-                            <h3 className="text-base font-extrabold text-white flex items-center gap-2">
-                                <PlugsConnected className="w-5 h-5 text-[#e98425]" /> Pair Device WhatsApp
-                            </h3>
-                            <p className="text-xs text-[#f5efe4]/60 mt-1">
-                                Pindai QR Code atau gunakan Kode Pairing 8-digit dari WhatsApp di HP Anda.
-                            </p>
-                        </div>
-
-                        {/* Pairing Mode Tabs */}
-                        <div className="flex items-center bg-[#0d0c0b] border border-white/10 rounded-xl p-1">
-                            <button
-                                type="button"
-                                onClick={() => setPairingMode('qr')}
-                                className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 ${
-                                    pairingMode === 'qr' ? 'bg-[#e98425] text-[#1a1714]' : 'text-[#f5efe4]/50'
-                                }`}
-                            >
-                                <QrCode className="w-4 h-4" /> Scan QR Code
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setPairingMode('code')}
-                                className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 ${
-                                    pairingMode === 'code' ? 'bg-[#e98425] text-[#1a1714]' : 'text-[#f5efe4]/50'
-                                }`}
-                            >
-                                <Key className="w-4 h-4" /> Kode Pairing HP
-                            </button>
-                        </div>
-
-                        {/* QR Code Tab View */}
-                        {pairingMode === 'qr' ? (
-                            <div className="flex flex-col items-center justify-center p-4 bg-white/5 border border-white/10 rounded-2xl gap-3">
-                                <div className="p-3 bg-white rounded-xl shadow-xl min-w-[200px] min-h-[200px] flex items-center justify-center">
-                                    {qrError ? (
-                                        <div className="flex flex-col items-center gap-2 p-4 text-center">
-                                            <span className="text-red-500 text-xs font-mono">{qrError}</span>
-                                        </div>
-                                    ) : qrCodeData ? (
-                                        <img 
-                                            src={qrCodeData} 
-                                            alt="WhatsApp QR Code"
-                                            className="w-44 h-44 object-contain"
-                                            onError={() => setQrCodeData(null)}
-                                        />
-                                    ) : (
-                                        <div className="flex flex-col items-center gap-2 p-6 text-center">
-                                            <ArrowClockwise className="w-8 h-8 text-[#e98425] animate-spin" />
-                                            <span className="text-[11px] font-mono font-bold text-[#1a1714]">Memuat QR Code...</span>
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="flex flex-col gap-1 text-center">
-                                    <span className="text-[11px] font-mono text-[#f5efe4]/70 font-bold">Cara Scan:</span>
-                                    <span className="text-[11px] font-mono text-[#f5efe4]/50 leading-relaxed">
-                                        WhatsApp HP → ⋮ Menu → Perangkat Tertaut → Tautkan Perangkat → Pindai QR di atas
-                                    </span>
-                                </div>
-                                <div className="flex items-center gap-1.5 text-[10px] font-mono text-amber-400">
-                                    <ArrowClockwise className="w-3 h-3 animate-spin" />
-                                    Menunggu pemindaian QR... (auto-refresh setiap 3 detik)
-                                </div>
-                            </div>
-                        ) : (
-                            /* Phone Pairing Code Tab View */
-                            <form onSubmit={handleGetPairingCode} className="flex flex-col gap-4 bg-white/5 border border-white/10 rounded-2xl p-4">
-                                <div>
-                                    <label className="block text-xs font-mono font-bold text-[#f5efe4]/70 mb-1">
-                                        Nomor WhatsApp HP Anda (format: 628xxx)
-                                    </label>
-                                    <input 
-                                        type="tel"
-                                        placeholder="628123456789"
-                                        value={phoneInput}
-                                        onChange={(e) => setPhoneInput(e.target.value.replace(/[^0-9]/g, ''))}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white font-mono focus:outline-none focus:border-[#e98425]"
-                                    />
-                                </div>
-
-                                <button
-                                    type="submit"
-                                    disabled={pairingCodeLoading || !phoneInput.trim()}
-                                    className="w-full py-2.5 rounded-xl bg-[#e98425] text-[#1a1714] text-xs font-extrabold shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
+                            <div>
+                                <InputLabel htmlFor="branch" value="Hubungkan ke Cabang UMKM" />
+                                <select
+                                    id="branch"
+                                    className="mt-1 w-full bg-white/5 border border-white/10 hover:border-white/20 focus:border-[#e98425] text-white rounded-xl py-2 px-3 text-xs outline-none transition-all"
+                                    value={branchId}
+                                    onChange={(e) => setBranchId(e.target.value)}
                                 >
-                                    {pairingCodeLoading 
-                                        ? <ArrowClockwise className="w-4 h-4 animate-spin" />
-                                        : <PhoneCall className="w-4 h-4" />
-                                    }
-                                    {pairingCodeLoading ? 'Memuat Kode...' : 'Generate Kode Pairing 8-Digit'}
-                                </button>
+                                    <option value="" className="bg-[#1a1714]">Semua Cabang (Global)</option>
+                                    {branches.map((b) => (
+                                        <option key={b.id} value={b.id} className="bg-[#1a1714]">{b.name}</option>
+                                    ))}
+                                </select>
+                            </div>
 
-                                {pairingCode && (
-                                    <div className={`p-3 border rounded-xl text-center ${
-                                        pairingCode.startsWith('Gagal') 
-                                            ? 'bg-red-500/10 border-red-500/30' 
-                                            : 'bg-emerald-500/10 border-emerald-500/30'
-                                    }`}>
-                                        <span className="text-[10px] font-mono block mb-1 text-[#f5efe4]/60">
-                                            {pairingCode.startsWith('Gagal') ? '⚠️ Error:' : 'Kode Pairing WhatsApp Anda:'}
-                                        </span>
-                                        <span className={`text-xl font-mono font-extrabold tracking-widest ${
-                                            pairingCode.startsWith('Gagal') ? 'text-red-400' : 'text-emerald-400'
-                                        }`}>
-                                            {pairingCode}
-                                        </span>
-                                        {!pairingCode.startsWith('Gagal') && (
-                                            <p className="text-[10px] font-mono text-[#f5efe4]/50 mt-1">
-                                                Masukkan kode ini di WhatsApp HP Anda → Perangkat Tertaut → Tautkan dengan nomor telepon
-                                            </p>
-                                        )}
+                            <PrimaryButton type="submit" className="w-full justify-center">
+                                + Tambah Perangkat WhatsApp
+                            </PrimaryButton>
+                        </form>
+                    </div>
+                </div>
+
+                {/* Right Side: Devices Grid */}
+                <div className="flex-1">
+                    <div className="bg-[#1a1714] border border-[#ebe6dd]/10 p-6 rounded-[24px] shadow-lg">
+                        <div className="flex items-center justify-between pb-6 mb-6 border-b border-white/10">
+                            <div>
+                                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                    <DeviceMobile className="w-6 h-6 text-[#e98425]" />
+                                    Multi-Device WhatsApp Manager ({devices.length})
+                                </h3>
+                                <p className="text-xs text-[#f5efe4]/50 mt-1">
+                                    Daftar sesi WhatsApp terdaftar dan status keaktifan koneksi socket Baileys.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {devices.map((d) => (
+                                <div 
+                                    key={d.id} 
+                                    className="bg-[#24201c] border border-white/5 hover:border-[#e98425]/40 p-5 rounded-2xl transition-all duration-300 flex flex-col justify-between"
+                                >
+                                    <div>
+                                        <div className="flex justify-between items-start mb-3">
+                                            <span className="px-3 py-1 rounded-full text-[10px] font-extrabold tracking-wider uppercase bg-white/5 text-[#f5efe4]/70 border border-white/10 font-mono">
+                                                {d.session_id}
+                                            </span>
+                                            {d.status === 'connected' ? (
+                                                <span className="flex items-center gap-1 text-[11px] text-emerald-400 font-semibold px-2.5 py-0.5 rounded-full bg-emerald-950/50 border border-emerald-800/30">
+                                                    <PlugsConnected className="w-3.5 h-3.5" /> Online
+                                                </span>
+                                            ) : (
+                                                <span className="flex items-center gap-1 text-[11px] text-amber-400 font-semibold px-2.5 py-0.5 rounded-full bg-amber-950/50 border border-amber-800/30">
+                                                    <Plugs className="w-3.5 h-3.5" /> Disconnected
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        <h4 className="text-lg font-bold text-white mb-2">
+                                            {d.name}
+                                        </h4>
+
+                                        <div className="space-y-1.5 text-xs text-[#f5efe4]/70">
+                                            <div className="flex items-center gap-2">
+                                                <Phone className="w-4 h-4 text-[#e98425] shrink-0" />
+                                                <span>{d.phone_number ? `+${d.phone_number}` : 'Nomor WA belum terhubung'}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <Buildings className="w-4 h-4 text-[#e98425] shrink-0" />
+                                                <span>{d.branch ? d.branch.name : 'Global (Semua Cabang)'}</span>
+                                            </div>
+                                        </div>
                                     </div>
-                                )}
-                            </form>
-                        )}
 
-                        <button 
-                            onClick={() => setShowPairModal(false)}
-                            className="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white text-xs font-bold border border-white/10 transition-all"
+                                    <div className="mt-5 pt-3 border-t border-white/5 flex items-center justify-between">
+                                        <button
+                                            onClick={() => setSelectedQrDevice(d)}
+                                            className="px-3 py-1.5 bg-[#e98425]/10 hover:bg-[#e98425]/20 text-[#e98425] border border-[#e98425]/30 text-xs font-bold rounded-xl transition flex items-center gap-1.5"
+                                        >
+                                            <QrCode className="w-4 h-4" /> Scan QR
+                                        </button>
+
+                                        <button
+                                            onClick={() => confirmDelete(d.id)}
+                                            className="p-1.5 text-red-400/60 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition"
+                                            title="Hapus Perangkat"
+                                        >
+                                            <Trash className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* QR Code Modal */}
+            {selectedQrDevice && (
+                <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-[#1a1714] border border-[#ebe6dd]/20 p-6 rounded-[24px] max-w-sm w-full text-center space-y-4">
+                        <h3 className="text-lg font-bold text-white">Scan QR Code — {selectedQrDevice.name}</h3>
+                        <p className="text-xs text-[#f5efe4]/60">Buka WhatsApp di HP Anda &gt; Perangkat Tertaut &gt; Tautkan Perangkat.</p>
+                        
+                        <div className="bg-white p-4 rounded-2xl inline-block border border-white/20">
+                            <img 
+                                src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=SESSION_${selectedQrDevice.session_id}_WHATSAI_CRM`} 
+                                alt="QR Code" 
+                                className="w-48 h-48 mx-auto"
+                            />
+                        </div>
+
+                        <button
+                            onClick={() => setSelectedQrDevice(null)}
+                            className="w-full py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition"
                         >
                             Tutup Modal
                         </button>
@@ -518,29 +211,13 @@ export default function DeviceConnected({ auth }) {
                 </div>
             )}
 
-            {/* Webhook Configuration & Health */}
-            <div className="bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-6">
-                <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-                    <Broadcast className="w-4 h-4 text-[#e98425]" /> Konfigurasi Webhook Gateway (OpenWA)
-                </h3>
-
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 p-4 rounded-xl bg-white/5 border border-white/5">
-                    <div className="flex flex-col min-w-0">
-                        <span className="text-xs font-mono text-[#f5efe4]/40 mb-1">Target Webhook URL (Laravel REST Endpoint):</span>
-                        <code className="text-xs font-mono text-emerald-400 font-bold truncate">
-                            http://localhost:8001/api/whatsapp/webhook
-                        </code>
-                    </div>
-
-                    <button 
-                        onClick={copyWebhook}
-                        className="px-4 py-2 rounded-lg bg-[#e98425]/15 hover:bg-[#e98425]/25 text-[#e98425] text-xs font-bold border border-[#e98425]/30 transition-all flex items-center justify-center gap-2 shrink-0"
-                    >
-                        {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                        {copied ? 'Tersalin!' : 'Salin URL'}
-                    </button>
-                </div>
-            </div>
+            <ConfirmModal
+                isOpen={deleteModalOpen}
+                onClose={() => setDeleteModalOpen(false)}
+                onConfirm={executeDelete}
+                title="Hapus Perangkat WhatsApp?"
+                message="Tindakan ini akan menghapus sesi perangkat dari sistem."
+            />
         </AdminLayout>
     );
 }

@@ -55,10 +55,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard/settings', [\App\Http\Controllers\WhatsAppController::class, 'settingsPage'])->name('crm.settings');
     Route::post('/dashboard/settings', [\App\Http\Controllers\WhatsAppController::class, 'updateSettings'])->name('crm.settings.update');
     
-    // Device Connected & Message Templates Pages (AUTOIN Suite Architecture)
-    Route::get('/dashboard/device', function () {
-        return Inertia::render('DeviceConnected');
-    })->name('crm.device');
+    // Device Connected & Multi-Device Manager
+    Route::get('/dashboard/device', [\App\Http\Controllers\DeviceController::class, 'index'])->name('crm.device');
+    Route::post('/dashboard/devices/store', [\App\Http\Controllers\DeviceController::class, 'store'])->name('devices.store');
+    Route::delete('/dashboard/devices/{device}', [\App\Http\Controllers\DeviceController::class, 'destroy'])->name('devices.destroy');
 
     Route::get('/dashboard/templates', function () {
         return Inertia::render('Templates');
