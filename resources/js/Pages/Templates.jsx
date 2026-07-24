@@ -92,23 +92,24 @@ export default function Templates({ auth }) {
         <AdminLayout activeTab="templates" title="Daftar Template Pesan">
             <Head title="Template Pesan - WhatsAI CRM" />
 
-            {/* Header Title Section */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-[#ebe6dd]/10">
+            {/* Header Banner */}
+            <div className="bg-[#1a1714] border border-[#ebe6dd]/10 p-6 rounded-[24px] shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div>
-                    <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-3">
-                        Daftar Template Pesan
-                        <span className="text-xs font-mono font-bold bg-[#e98425]/15 text-[#e98425] px-2.5 py-1 rounded-full border border-[#e98425]/30">
-                            {filteredTemplates.length} / {templates.length} Template
-                        </span>
+                    <span className="eyebrow-badge mb-3">
+                        <span className="dot"></span>Message Templates Library
+                    </span>
+                    <h1 className="text-2xl font-extrabold text-white flex items-center gap-2 mt-2">
+                        <FileText className="w-7 h-7 text-[#e98425]" />
+                        <span>Daftar Template <span className="serif-title italic text-[#e98425]">Pesan & AI Prompts</span></span>
                     </h1>
-                    <p className="text-xs text-[#f5efe4]/60 mt-1">
+                    <p className="text-xs text-[#f5efe4]/50 leading-relaxed mt-1">
                         Kelola template pesan broadcast & AI prompt agar pengiriman berulang menjadi lebih efisien.
                     </p>
                 </div>
 
                 <button 
                     onClick={() => setIsModalOpen(true)}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#e98425] hover:bg-[#d4741c] text-[#1a1714] text-xs font-extrabold shadow-lg shadow-[#e98425]/15 transition-all"
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#e98425] hover:bg-[#d4741c] text-[#1a1714] text-xs font-extrabold shadow-lg shadow-[#e98425]/15 transition-all cursor-pointer"
                 >
                     <Plus className="w-4 h-4" weight="bold" />
                     Template Baru

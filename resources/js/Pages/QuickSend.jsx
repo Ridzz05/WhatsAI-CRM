@@ -247,15 +247,20 @@ export default function QuickSend({ auth, logs = [] }) {
                 onCancel={() => setDeleteTargetId(null)}
             />
 
-            {/* Page Header */}
-            <div className="pb-4 border-b border-[#ebe6dd]/10 mb-6">
-                <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
-                    <Lightning className="w-6 h-6 sm:w-7 sm:h-7 text-[#e98425]" />
-                    <span>Kirim Cepat (Quick Send)</span>
-                </h1>
-                <p className="text-xs text-[#f5efe4]/60 mt-1">
-                    Kirim pesan ke beberapa kontak/tujuan sekaligus secara instan tanpa membuat campaign.
-                </p>
+            {/* Header Banner */}
+            <div className="bg-[#1a1714] border border-[#ebe6dd]/10 p-6 rounded-[24px] shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <div>
+                    <span className="eyebrow-badge mb-3">
+                        <span className="dot"></span>Instant Messenger
+                    </span>
+                    <h1 className="text-2xl font-extrabold text-white flex items-center gap-2 mt-2">
+                        <Lightning className="w-7 h-7 text-[#e98425]" />
+                        <span>Kirim Cepat <span className="serif-title italic text-[#e98425]">(Quick Send)</span></span>
+                    </h1>
+                    <p className="text-xs text-[#f5efe4]/50 leading-relaxed mt-1">
+                        Kirim pesan ke beberapa kontak/tujuan sekaligus secara instan tanpa perlu membuat campaign broadcast.
+                    </p>
+                </div>
             </div>
 
             {/* Main Grid (Left Form 7 Cols, Right History 5 Cols) */}
@@ -264,7 +269,7 @@ export default function QuickSend({ auth, logs = [] }) {
                 {/* LEFT COLUMN: Main Form & AI Assistant (7 Cols) */}
                 <div className="lg:col-span-7 flex flex-col gap-4 sm:gap-6">
                     
-                    <form onSubmit={handleSendQuick} className="bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-4 sm:p-6 flex flex-col gap-5 shadow-xl">
+                    <form onSubmit={handleSendQuick} className="bg-[#1a1714] border border-[#ebe6dd]/10 rounded-[24px] p-6 flex flex-col gap-5 shadow-lg">
                         
                         {/* 1. PILIH AKUN / CHANNEL PENGIRIM */}
                         <div>

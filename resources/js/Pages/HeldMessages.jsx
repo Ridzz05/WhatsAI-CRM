@@ -71,68 +71,67 @@ export default function HeldMessages({ logs, filters = {}, stats = {} }) {
         <AdminLayout activeTab="held-messages" title="Log Pesan Ditahan - WhatsAI CRM">
             <Head title="Log Pesan Ditahan (CS Mute)" />
 
-            <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
-                
-                {/* Header & Breadcrumb */}
+            <div className="space-y-6 relative z-10 p-1">
+                {/* Header Banner */}
+                <div className="bg-[#1a1714] border border-[#ebe6dd]/10 p-6 rounded-[24px] shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div>
-                    <Breadcrumb items={[{ label: 'Log Pesan Ditahan' }]} />
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                        <div className="min-w-0">
-                            <h1 className="text-xl sm:text-2xl font-extrabold text-white flex items-center gap-2">
-                                <ShieldSlash className="w-6 h-6 sm:w-7 sm:h-7 text-[#e98425]" />
-                                <span>Log Pesan Ditahan (CS Mute)</span>
-                            </h1>
-                            <p className="text-xs text-[#f5efe4]/60 mt-1">
-                                Pantau seluruh pesan pelanggan yang ditahan dari balasan AI otomatis akibat balasan manual HP CS atau status Handover.
-                            </p>
-                        </div>
+                    <span className="eyebrow-badge mb-3">
+                        <span className="dot"></span>Smart Anti-Mute Protection
+                    </span>
+                    <h1 className="text-2xl font-extrabold text-white flex items-center gap-2 mt-2">
+                        <ShieldSlash className="w-7 h-7 text-[#e98425]" />
+                        <span>Log Pesan Ditahan <span className="serif-title italic text-[#e98425]">(CS Handover Mute)</span></span>
+                    </h1>
+                    <p className="text-xs text-[#f5efe4]/50 leading-relaxed mt-1">
+                        Pantau seluruh pesan pelanggan yang ditahan dari balasan AI otomatis akibat balasan manual HP CS atau status Handover.
+                    </p>
+                </div>
+            </div>
+
+            {/* Flash Alert Notification */}
+            {flash?.success && (
+                <Alert 
+                    type="success" 
+                    title="BERHASIL" 
+                    message={flash.success} 
+                />
+            )}
+
+            {/* Stat Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                <div className="bg-[#1a1714] border border-[#ebe6dd]/10 rounded-[24px] p-5 flex items-center justify-between shadow-lg">
+                    <div>
+                        <p className="text-[10px] font-mono uppercase tracking-wider text-[#f5efe4]/50">Total Pesan Ditahan</p>
+                        <h3 className="text-2xl font-extrabold text-white mt-1">{stats.total_held || 0} Pesan</h3>
+                    </div>
+                    <div className="w-12 h-12 rounded-2xl bg-[#e98425]/10 border border-[#e98425]/20 flex items-center justify-center text-[#e98425]">
+                        <ShieldSlash className="w-6 h-6" />
                     </div>
                 </div>
 
-                {/* Flash Alert Notification */}
-                {flash?.success && (
-                    <Alert 
-                        type="success" 
-                        title="BERHASIL" 
-                        message={flash.success} 
-                    />
-                )}
-
-                {/* Stat Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-                    <div className="bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-4 sm:p-5 flex items-center justify-between shadow-lg">
-                        <div>
-                            <p className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-[#f5efe4]/50">Total Pesan Ditahan</p>
-                            <h3 className="text-xl sm:text-2xl font-extrabold text-white mt-1">{stats.total_held || 0} Pesan</h3>
-                        </div>
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[#e98425]/10 border border-[#e98425]/20 flex items-center justify-center text-[#e98425]">
-                            <ShieldSlash className="w-5 h-5 sm:w-6 sm:h-6" />
-                        </div>
+                <div className="bg-[#1a1714] border border-[#ebe6dd]/10 rounded-[24px] p-5 flex items-center justify-between shadow-lg">
+                    <div>
+                        <p className="text-[10px] font-mono uppercase tracking-wider text-[#f5efe4]/50">Mute 30-Menit Aktif</p>
+                        <h3 className="text-2xl font-extrabold text-amber-400 mt-1">{stats.active_cache_mutes || 0} Nomor</h3>
                     </div>
-
-                    <div className="bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-4 sm:p-5 flex items-center justify-between shadow-lg">
-                        <div>
-                            <p className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-[#f5efe4]/50">Mute 30-Menit Aktif</p>
-                            <h3 className="text-xl sm:text-2xl font-extrabold text-amber-400 mt-1">{stats.active_cache_mutes || 0} Nomor</h3>
-                        </div>
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
-                            <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
-                        </div>
-                    </div>
-
-                    <div className="bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-4 sm:p-5 flex items-center justify-between shadow-lg">
-                        <div>
-                            <p className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-[#f5efe4]/50">Dipulihkan ke AI</p>
-                            <h3 className="text-xl sm:text-2xl font-extrabold text-emerald-400 mt-1">{stats.total_restored || 0} Sesi</h3>
-                        </div>
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-                            <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6" />
-                        </div>
+                    <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                        <Clock className="w-6 h-6" />
                     </div>
                 </div>
 
-                {/* Filter & Search Bar */}
-                <div className="bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="bg-[#1a1714] border border-[#ebe6dd]/10 rounded-[24px] p-5 flex items-center justify-between shadow-lg">
+                    <div>
+                        <p className="text-[10px] font-mono uppercase tracking-wider text-[#f5efe4]/50">Dipulihkan ke AI</p>
+                        <h3 className="text-2xl font-extrabold text-emerald-400 mt-1">{stats.total_restored || 0} Sesi</h3>
+                    </div>
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                        <CheckCircle className="w-6 h-6" />
+                    </div>
+                </div>
+            </div>
+
+            {/* Filter & Search Bar */}
+            <div className="bg-[#1a1714] border border-[#ebe6dd]/10 rounded-[24px] p-4 flex flex-col md:flex-row items-center justify-between gap-4 mb-6 shadow-lg">
                     <form onSubmit={handleSearch} className="flex-1 w-full flex items-center gap-2">
                         <div className="relative flex-1">
                             <MagnifyingGlass className="w-4 h-4 absolute left-3.5 top-3.5 text-[#f5efe4]/40" />

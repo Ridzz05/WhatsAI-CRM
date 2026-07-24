@@ -108,24 +108,24 @@ export default function LiveLogs() {
         <AdminLayout activeTab="live-logs" title="Live System Logs - WhatsAI CRM">
             <Head title="Live Terminal Logs (Real-Time)" />
 
-            <div className="max-w-7xl mx-auto space-y-6">
-                
-                {/* Header & Breadcrumb */}
-                <div>
-                    <Breadcrumb items={[{ label: 'Live System Logs' }]} />
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                        <div className="min-w-0">
-                            <h1 className="text-xl sm:text-2xl font-extrabold text-white flex items-center gap-2">
-                                <TerminalWindow className="w-6 h-6 sm:w-7 sm:h-7 text-[#e98425]" />
-                                <span>Live Terminal Logs Console</span>
-                            </h1>
-                            <p className="text-xs text-[#f5efe4]/60 mt-1">
-                                Pantau aliran log pesan masuk, respon AI, error, dan penahanan CS Mute secara real-time langsung di browser.
-                            </p>
-                        </div>
+            <div className="space-y-6 relative z-10 p-1">
+                {/* Header Banner */}
+                <div className="bg-[#1a1714] border border-[#ebe6dd]/10 p-6 rounded-[24px] shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <span className="eyebrow-badge mb-3">
+                            <span className="dot"></span>Real-Time Log Stream
+                        </span>
+                        <h1 className="text-2xl font-extrabold text-white flex items-center gap-2 mt-2">
+                            <TerminalWindow className="w-7 h-7 text-[#e98425]" />
+                            <span>Live System <span className="serif-title italic text-[#e98425]">Terminal Logs</span></span>
+                        </h1>
+                        <p className="text-xs text-[#f5efe4]/50 leading-relaxed mt-1">
+                            Pantau aliran log aktivitas gateway WhatsApp, Gemini AI, dan event webhook secara real-time.
+                        </p>
+                    </div>
 
-                        {/* Top Action Bar */}
-                        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                    {/* Top Action Bar */}
+                    <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                             <button
                                 onClick={() => setIsStreaming(!isStreaming)}
                                 className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-mono font-bold flex items-center gap-2 border transition-all cursor-pointer ${
@@ -154,7 +154,6 @@ export default function LiveLogs() {
                                 <span>Clear</span>
                             </button>
                         </div>
-                    </div>
                 </div>
 
                 {/* Alert Notification */}

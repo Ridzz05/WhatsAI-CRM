@@ -73,23 +73,24 @@ export default function JadwalStatus({ auth, statuses = [] }) {
         <AdminLayout activeTab="status" title="Jadwal Status WhatsApp">
             <Head title="Jadwal Status WA - WhatsAI CRM" />
 
-            {/* Header Title Section */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-[#ebe6dd]/10">
+            {/* Header Banner */}
+            <div className="bg-[#1a1714] border border-[#ebe6dd]/10 p-6 rounded-[24px] shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div>
-                    <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-3">
-                        Jadwal Status WhatsApp
-                        <span className="text-xs font-mono font-bold bg-[#e98425]/15 text-[#e98425] px-2.5 py-1 rounded-full border border-[#e98425]/30">
-                            WA Story Automation
-                        </span>
+                    <span className="eyebrow-badge mb-3">
+                        <span className="dot"></span>WA Story Automation
+                    </span>
+                    <h1 className="text-2xl font-extrabold text-white flex items-center gap-2 mt-2">
+                        <CalendarBlank className="w-7 h-7 text-[#e98425]" />
+                        <span>Jadwal Status <span className="serif-title italic text-[#e98425]">WhatsApp Story</span></span>
                     </h1>
-                    <p className="text-xs text-[#f5efe4]/60 mt-1">
-                        Jadwalkan posting status teks atau media ke WhatsApp Story secara otomatis untuk promosi & branding.
+                    <p className="text-xs text-[#f5efe4]/50 leading-relaxed mt-1">
+                        Jadwalkan posting status teks atau media ke WhatsApp Story secara otomatis untuk promosi & branding gym.
                     </p>
                 </div>
 
                 <button 
                     onClick={() => router.reload()}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white text-xs font-bold border border-white/10 transition-all"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white text-xs font-bold border border-white/10 transition-all cursor-pointer"
                 >
                     <ArrowClockwise className="w-4 h-4" weight="bold" />
                     Refresh
@@ -100,7 +101,7 @@ export default function JadwalStatus({ auth, statuses = [] }) {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 
                 {/* Left Panel: Create Form & Real-time Phone Story Preview (5 cols) */}
-                <div className="lg:col-span-5 bg-[#141210] border border-[#ebe6dd]/10 rounded-2xl overflow-hidden flex flex-col">
+                <div className="lg:col-span-5 bg-[#1a1714] border border-[#ebe6dd]/10 rounded-[24px] overflow-hidden flex flex-col shadow-lg">
                     
                     {/* Tab Selector */}
                     <div className="flex items-center border-b border-[#ebe6dd]/10 bg-[#0d0c0b] p-1.5">
