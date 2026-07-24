@@ -111,14 +111,20 @@ html.light aside span.font-bold,
 html.light aside a.font-bold,
 html.light div.text-white:not(button *):not(.bg-\[\#e98425\] *):not(.bg-amber-500 *):not(.bg-emerald-500 *):not(.bg-indigo-500 *):not(.bg-red-500 *):not(.terminal-window *),
 html.light p.text-white:not(button *):not(.terminal-window *),
-html.light span.text-white:not(button *):not(.terminal-window *) {
+html.light span.text-white:not(button *):not(.terminal-window *),
+html.light .text-white\/90:not(.terminal-window *),
+html.light .text-white\/80:not(.terminal-window *),
+html.light .text-white\/70:not(.terminal-window *) {
   color: #0f172a !important;
 }
 
 /* Muted Subtext & Descriptions */
 html.light .text-\[\#f5efe4\]\/90:not(.terminal-window *),
 html.light .text-\[\#f5efe4\]\/80:not(.terminal-window *),
-html.light .text-\[\#f5efe4\]\/70:not(.terminal-window *) {
+html.light .text-\[\#f5efe4\]\/70:not(.terminal-window *),
+html.light .text-white\/60:not(.terminal-window *),
+html.light .text-white\/50:not(.terminal-window *),
+html.light .text-white\/40:not(.terminal-window *) {
   color: #334155 !important;
 }
 

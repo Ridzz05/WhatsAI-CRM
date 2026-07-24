@@ -179,7 +179,7 @@ export default function HeldMessages({ logs, filters = {}, stats = {} }) {
                                         </span>
                                     </div>
 
-                                    <div className="p-2.5 rounded-lg bg-[#1a1714] border border-[#ebe6dd]/10 text-xs text-white/90 leading-relaxed font-mono">
+                                    <div className="p-2.5 rounded-xl bg-[#24201c] border border-white/5 text-xs text-white leading-relaxed font-mono">
                                         "{log.message}"
                                     </div>
 
@@ -256,7 +256,7 @@ export default function HeldMessages({ logs, filters = {}, stats = {} }) {
 
                                             {/* Held Message Content */}
                                             <td className="py-3.5 px-4 max-w-md">
-                                                <div className="p-2.5 rounded-lg bg-[#1a1714] border border-[#ebe6dd]/10 text-xs text-white/90 leading-relaxed font-mono">
+                                                <div className="p-2.5 rounded-xl bg-[#24201c] border border-white/5 text-xs text-white leading-relaxed font-mono">
                                                     "{log.message}"
                                                 </div>
                                             </td>
