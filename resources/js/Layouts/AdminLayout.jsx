@@ -223,9 +223,11 @@ export default function AdminLayout({ children, activeTab = 'dashboard', title =
                     {/* Logo & Workspace Header */}
                     <div className="flex items-center justify-between pb-4 border-b border-[#ebe6dd]/10">
                         <Link href="/" className="flex items-center gap-3 min-w-0">
-                            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#e98425] to-[#f59e0b] flex items-center justify-center text-[#1a1714] font-black font-mono text-sm shadow-lg shadow-[#e98425]/20 select-none shrink-0">
-                                W
-                            </div>
+                            <img 
+                                src="/images/logo.png" 
+                                alt="WhatsAI CRM Logo" 
+                                className="w-9 h-9 rounded-xl object-cover border border-[#e98425]/30 shadow-lg shadow-[#e98425]/20 shrink-0" 
+                            />
                             <div className="flex flex-col leading-tight min-w-0">
                                 <span className="font-extrabold text-base tracking-tight text-white font-sans flex items-center gap-1">
                                     WhatsAI <span className="text-[10px] font-mono font-bold bg-[#e98425]/20 text-[#e98425] px-1.5 py-0.5 rounded border border-[#e98425]/30">v2.0</span>
