@@ -329,14 +329,14 @@ export default function QuickSend({ auth, logs = [] }) {
                                 </label>
 
                                 {/* Variables Bar */}
-                                <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#f5efe4]/60 flex-wrap">
+                                <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#f5efe4]/70 flex-wrap">
                                     <span>SISIPKAN:</span>
                                     {['nama', 'nomor', 'tanggal', 'waktu'].map((v) => (
                                         <button
                                             type="button"
                                             key={v}
                                             onClick={() => insertVariable(v)}
-                                            className="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 border border-white/10 text-[10.5px] font-mono text-[#e98425] transition-all cursor-pointer"
+                                            className="px-2 py-0.5 rounded-lg bg-[#24201c] hover:bg-[#e98425]/20 border border-white/10 hover:border-[#e98425]/40 text-[10.5px] font-mono font-bold text-[#e98425] transition-all cursor-pointer shadow-sm"
                                         >
                                             {'{' + '{' + v + '}' + '}'}
                                         </button>
