@@ -207,7 +207,7 @@ export default function LiveLogs() {
                 </div>
 
                 {/* Cyberpunk Terminal Console Screen */}
-                <div className="bg-[#0a0a0c] border border-[#ebe6dd]/15 rounded-2xl p-3 sm:p-5 shadow-2xl relative font-mono text-xs overflow-hidden">
+                <div className="terminal-window bg-[#0a0a0c] border border-[#ebe6dd]/15 rounded-2xl p-3 sm:p-5 shadow-2xl relative font-mono text-xs overflow-hidden">
                     
                     {/* Terminal Header Bar */}
                     <div className="flex items-center justify-between border-b border-[#ebe6dd]/10 pb-3 mb-4 text-[#f5efe4]/40 text-[11px] flex-wrap gap-2">
@@ -231,7 +231,7 @@ export default function LiveLogs() {
                                 return (
                                     <div 
                                         key={index}
-                                        className="p-3 rounded-xl bg-[#141210]/90 border border-white/5 hover:border-white/10 transition-colors flex flex-col md:flex-row md:items-start gap-3"
+                                        className="terminal-row p-3 rounded-xl bg-[#141210]/90 border border-white/5 hover:border-white/10 transition-colors flex flex-col md:flex-row md:items-start gap-3"
                                     >
                                         {/* Timestamp & Level */}
                                         <div className="flex items-center gap-2 shrink-0">

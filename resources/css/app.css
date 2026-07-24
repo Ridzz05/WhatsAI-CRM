@@ -35,12 +35,10 @@
 }
 
 /* ==========================================================================
-   AIRTIGHT PROPORTIONAL LIGHT THEME SYSTEM
-   Switches background containers, cards, tables, headers, and text smoothly
-   while strictly preserving button contrast, badges, and status highlights.
+   PERFECTED PROPORTIONAL LIGHT THEME SYSTEM
    ========================================================================== */
 
-/* 1. App Background & Main Canvas */
+/* 1. App Main Background */
 html.light body {
   background:
     radial-gradient(ellipse 80% 50% at 50% -10%, rgba(233, 132, 37, 0.08), transparent 70%),
@@ -52,24 +50,26 @@ html.light main {
   background-color: #f1f5f9 !important;
 }
 
-/* 2. Sidebars, Top Headers, Mobile Navbars & Modals */
+/* 2. Sidebars, Top Headers, Mobile Navbars & Card Containers */
 html.light header,
 html.light aside,
 html.light nav,
 html.light .bg-\[\#0d0c0b\],
-html.light .bg-\[\#090807\],
-html.light .bg-\[\#0e0d0c\],
+html.light .bg-\[\#090807\]:not(.terminal-window),
+html.light .bg-\[\#0e0d0c\]:not(.terminal-window),
 html.light .bg-\[\#110f0e\],
 html.light .bg-\[\#12100e\],
 html.light .bg-\[\#161412\],
+html.light .bg-\[\#141210\]:not(.terminal-row),
 html.light .bg-\[\#1a1714\],
 html.light .bg-slate-900,
 html.light .bg-slate-950 {
   background-color: #ffffff !important;
   border-color: #e2e8f0 !important;
+  color: #0f172a !important;
 }
 
-/* 3. Sub-cards, Table Headers, Hover States & Secondary Panels */
+/* 3. Sub-cards, Table Headers, Filter Bars & Secondary Surfaces */
 html.light .bg-\[\#24201c\],
 html.light .bg-\[\#2d2924\],
 html.light .hover\:bg-\[\#24201c\]:hover,
@@ -80,13 +80,30 @@ html.light thead.bg-\[\#24201c\] {
   border-color: #cbd5e1 !important;
 }
 
-/* 4. Headings & Content Text (Restricted to containers so button text stays untouched) */
-html.light .bg-\[\#1a1714\] h1,
-html.light .bg-\[\#1a1714\] h2,
-html.light .bg-\[\#1a1714\] h3,
-html.light .bg-\[\#1a1714\] h4,
-html.light .bg-\[\#1a1714\] td,
-html.light .bg-\[\#1a1714\] p.text-white,
+/* 4. Terminal Window Exemption (Terminal remains sleek dark console in both modes) */
+html.light .terminal-window {
+  background-color: #090807 !important;
+  border-color: #27272a !important;
+  color: #f5efe4 !important;
+}
+
+html.light .terminal-window .terminal-row {
+  background-color: rgba(20, 18, 16, 0.9) !important;
+  border-color: rgba(255, 255, 255, 0.05) !important;
+  color: #f5efe4 !important;
+}
+
+html.light .terminal-window .text-\[\#f5efe4\]\/90,
+html.light .terminal-window .text-\[\#f5efe4\]\/40 {
+  color: rgba(245, 239, 228, 0.9) !important;
+}
+
+/* 5. Headings & Typography */
+html.light h1:not(.terminal-window *),
+html.light h2:not(.terminal-window *),
+html.light h3:not(.terminal-window *),
+html.light h4:not(.terminal-window *),
+html.light td:not(.terminal-window *),
 html.light header h2,
 html.light header span.font-bold,
 html.light aside span.font-bold,
@@ -95,25 +112,25 @@ html.light aside a.font-bold {
 }
 
 /* Subtext & Labels in Light Mode */
-html.light .text-\[\#f5efe4\]\/80,
-html.light .text-\[\#f5efe4\]\/70,
-html.light .text-\[\#f5efe4\]\/60,
-html.light .text-\[\#f5efe4\]\/50,
-html.light .text-\[\#f5efe4\]\/40,
+html.light .text-\[\#f5efe4\]\/80:not(.terminal-window *),
+html.light .text-\[\#f5efe4\]\/70:not(.terminal-window *),
+html.light .text-\[\#f5efe4\]\/60:not(.terminal-window *),
+html.light .text-\[\#f5efe4\]\/50:not(.terminal-window *),
+html.light .text-\[\#f5efe4\]\/40:not(.terminal-window *),
 html.light .text-slate-400,
 html.light .text-slate-500 {
   color: #475569 !important;
 }
 
 /* Borders in Light Mode */
-html.light .border-white\/10,
-html.light .border-white\/5,
-html.light .border-\[\#ebe6dd\]\/10,
-html.light .border-\[\#ebe6dd\]\/20 {
+html.light .border-white\/10:not(.terminal-window *),
+html.light .border-white\/5:not(.terminal-window *),
+html.light .border-\[\#ebe6dd\]\/10:not(.terminal-window *),
+html.light .border-\[\#ebe6dd\]\/20:not(.terminal-window *) {
   border-color: #e2e8f0 !important;
 }
 
-/* 5. Form Elements (Inputs, Selects, Textareas) */
+/* 6. Form Elements (Inputs, Selects, Textareas) */
 html.light input[type="text"],
 html.light input[type="number"],
 html.light input[type="date"],
@@ -129,7 +146,7 @@ html.light select option {
   color: #0f172a !important;
 }
 
-/* 6. Eyebrow Badge & Micro Badges */
+/* 7. Eyebrow Badge & Micro Badges */
 html.light .eyebrow-badge {
   color: #475569 !important;
   border-color: #cbd5e1 !important;
